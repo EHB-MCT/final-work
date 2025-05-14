@@ -1,9 +1,8 @@
 const express = require('express');
-
-const { logCatData, getAllCats } = require('../controllers/catsController');
+const { getAllCats, logCatData } = require('../controllers/catsController');
 const router = express.Router();
 
+router.get('/', getAllCats);     // <-- Dit moet er zijn
 router.post('/log', logCatData);
-router.get('/', getAllCats);
 
 module.exports = router;
