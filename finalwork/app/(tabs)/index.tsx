@@ -1,59 +1,79 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Dimensions, Text } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
-import * as Location from "expo-location"; 
 import { isPointWithinRadius } from "geolib";
 
 export default function HomeScreen() {
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [isInsideFence, setIsInsideFence] = useState(false);
-
-  const catLocation = {
+  const [catLocation, setCatLocation] = useState({
     latitude: 50.8503,
     longitude: 4.3517,
+  });
+
+  const homeLocation = {
+    latitude: 50.8500,
+    longitude: 4.3515,
   };
 
+  const [isInsideFence, setIsInsideFence] = useState(true);
+
+  // Simuleer de beweging van de kat     
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.log("Toestemming geweigerd");
-        return;
-      }
+    const interval = setInterval(() => {
+      setCatLocation((prev) => ({
+        latitude: prev.latitude + (Math.random() - 0.5) * 0.0002,
+        longitude: prev.longitude + (Math.random() - 0.5) * 0.0002,
+      }));
+    }, 3000); // elke 3 seconden
 
-      let location = await Location.getCurrentPositionAsync({});
-      const coords = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-
-      setUserLocation(coords);
-
-      const inFence = isPointWithinRadius(coords, catLocation, 100); // 100 meter
-      setIsInsideFence(inFence);
-    })();
+    return () => clearInterval(interval);
   }, []);
+
+  // Controleer of kat binnen de geofence is
+  useEffect(() => {
+    const inFence = isPointWithinRadius(catLocation, homeLocation, 100); // 100 meter
+    console.log("Kat binnen geofence?", inFence);
+    setIsInsideFence(inFence);
+  }, [catLocation]);
 
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
         initialRegion={{
-          ...catLocation,
+          ...homeLocation,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
       >
-        <Marker coordinate={catLocation} title="Pixel" description="Hier is je kat!" />
-        <Circle center={catLocation} radius={100} strokeColor="rgba(0,0,255,0.5)" fillColor="rgba(0,0,255,0.2)" />
+        {/* Thuiszone (geofence) */}
+        <Circle
+          center={homeLocation}
+          radius={100}
+          strokeColor="rgba(0,0,255,0.5)"
+          fillColor="rgba(0,0,255,0.2)"
+        />
 
-        {userLocation && (
-          <Marker coordinate={userLocation} title="Jij" pinColor="green" />
-        )}
+        {/* Marker voor thuis */}
+        <Marker
+          coordinate={homeLocation}
+          title="Thuis"
+          description="Hier mag de kat blijven"
+        />
+
+        {/* Marker voor kat */}
+        <Marker
+          coordinate={catLocation}
+          title="Pixel"
+          description="Locatie van je kat"
+          pinColor="orange"
+        />
       </MapView>
 
+      {/* Status */}
       <View style={styles.statusBox}>
-        <Text>{isInsideFence ? "Je bent BINNEN de zone" : "Je bent BUITEN de zone"}</Text>
+        <Text style={{ fontWeight: "bold", color: isInsideFence ? "green" : "red" }}>
+          {isInsideFence ? "De kat is BINNEN de zone" : "De kat is BUITEN de zone!"}
+        </Text>
       </View>
     </View>
   );
@@ -67,7 +87,7 @@ const styles = StyleSheet.create({
   },
   statusBox: {
     position: "absolute",
-    bottom: 50,
+    bottom: 150,
     left: 20,
     backgroundColor: "white",
     padding: 10,
