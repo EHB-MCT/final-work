@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Dimensions, Text } from "react-native";
-import MapView, { Marker, Circle } from "react-native-maps";
-import { isPointWithinRadius } from "geolib";
+import MapView, { Marker, Polygon } from "react-native-maps";
+import { isPointInPolygon } from "geolib";
 
 export default function HomeScreen() {
   const [catLocation, setCatLocation] = useState({
@@ -9,12 +9,19 @@ export default function HomeScreen() {
     longitude: 4.3517,
   });
 
-  const homeLocation = {
-    latitude: 50.8500,
-    longitude: 4.3515,
-  };
+  // Meerdere polygon zones (2 voorbeelden)
+  const zones = [
+    [
+  { latitude: 50.8507, longitude: 4.3505 },
+  { latitude: 50.8512, longitude: 4.3520 },
+  { latitude: 50.8500, longitude: 4.3530 },
+  { latitude: 50.8490, longitude: 4.3515 },
+  { latitude: 50.8495, longitude: 4.3495 },
+    ],
+    
+  ];
 
-  const [isInsideFence, setIsInsideFence] = useState(true);
+  const [isInsideFence, setIsInsideFence] = useState(false);
 
   // Simuleer de beweging van de kat     
   useEffect(() => {
@@ -23,16 +30,16 @@ export default function HomeScreen() {
         latitude: prev.latitude + (Math.random() - 0.5) * 0.0002,
         longitude: prev.longitude + (Math.random() - 0.5) * 0.0002,
       }));
-    }, 3000); // elke 3 seconden
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Controleer of kat binnen de geofence is
+  // Check of kat binnen een van de zones is
   useEffect(() => {
-    const inFence = isPointWithinRadius(catLocation, homeLocation, 100); // 100 meter
-    console.log("Kat binnen geofence?", inFence);
-    setIsInsideFence(inFence);
+    const insideAnyZone = zones.some(zone => isPointInPolygon(catLocation, zone));
+    setIsInsideFence(insideAnyZone);
+    console.log("Kat binnen een geofence zone?", insideAnyZone);
   }, [catLocation]);
 
   return (
@@ -40,27 +47,23 @@ export default function HomeScreen() {
       <MapView
         style={styles.map}
         initialRegion={{
-          ...homeLocation,
+          latitude: 50.8503,
+          longitude: 4.3517,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
       >
-        {/* Thuiszone (geofence) */}
-        <Circle
-          center={homeLocation}
-          radius={100}
-          strokeColor="rgba(0,0,255,0.5)"
-          fillColor="rgba(0,0,255,0.2)"
-        />
+        {zones.map((zone, idx) => (
+          <Polygon
+            key={idx}
+            coordinates={zone}
+            strokeColor="rgba(255,0,0,0.8)"
+            fillColor="rgba(255,0,0,0.3)"
+            strokeWidth={2}
+          />
+        ))}
 
-        {/* Marker voor thuis */}
-        <Marker
-          coordinate={homeLocation}
-          title="Thuis"
-          description="Hier mag de kat blijven"
-        />
-
-        {/* Marker voor kat */}
+        {/* Marker kat */}
         <Marker
           coordinate={catLocation}
           title="Pixel"
@@ -69,7 +72,6 @@ export default function HomeScreen() {
         />
       </MapView>
 
-      {/* Status */}
       <View style={styles.statusBox}>
         <Text style={{ fontWeight: "bold", color: isInsideFence ? "green" : "red" }}>
           {isInsideFence ? "De kat is BINNEN de zone" : "De kat is BUITEN de zone!"}
