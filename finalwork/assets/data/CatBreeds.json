@@ -1,0 +1,26 @@
+[
+  {
+    "label": "Maine Coon",
+    "value": "maine_coon"
+  },
+  {
+    "label": "Sphynx",
+    "value": "sphynx"
+  },
+  {
+    "label": "Noorse Boskat",
+    "value": "noorse_boskat"
+  },
+  {
+    "label": "Britse Korthaar",
+    "value": "brits"
+  },
+  {
+    "label": "Europees Korthaar",
+    "value": "europees"
+  },
+  {
+    "label": "Anders",
+    "value": "anders"
+  }
+]

@@ -14,6 +14,11 @@ import MapView, {
   LatLng,
 } from "react-native-maps";
 import { isPointInPolygon } from "geolib";
+import { router } from 'expo-router';
+
+
+<Button title="Katprofiel invullen" onPress={() => router.push('/CatProfileScreen')} />
+
 
 export default function EditableGeofenceMap() {
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
@@ -113,6 +118,11 @@ export default function EditableGeofenceMap() {
               ? "✅ Kat is BINNEN de zone"
               : "🚨 Kat is BUITEN de zone!"}
           </Text>
+            <Button
+    title="Katprofiel invullen"
+    onPress={() => router.push('/CatProfileScreen')}
+    color="#007AFF"
+  />
         </View>
       </View>
     </View>
