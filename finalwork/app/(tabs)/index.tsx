@@ -1,46 +1,60 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Dimensions, Text } from "react-native";
-import MapView, { Marker, Polygon } from "react-native-maps";
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  Dimensions,
+  Button,
+  Text,
+  Platform,
+} from "react-native";
+import MapView, {
+  Marker,
+  Polygon,
+  MapPressEvent,
+  LatLng,
+} from "react-native-maps";
 import { isPointInPolygon } from "geolib";
 
-export default function HomeScreen() {
-  const [catLocation, setCatLocation] = useState({
+export default function EditableGeofenceMap() {
+  const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [catLocation, setCatLocation] = useState<LatLng>({
     latitude: 50.8503,
     longitude: 4.3517,
   });
+  const [isInside, setIsInside] = useState(true);
 
-  // Meerdere polygon zones (2 voorbeelden)
-  const zones = [
-    [
-  { latitude: 50.8507, longitude: 4.3505 },
-  { latitude: 50.8512, longitude: 4.3520 },
-  { latitude: 50.8500, longitude: 4.3530 },
-  { latitude: 50.8490, longitude: 4.3515 },
-  { latitude: 50.8495, longitude: 4.3495 },
-    ],
-    
-  ];
+  // Voeg polygonpunt toe bij tikken op kaart
+  const handleMapPress = (e: MapPressEvent) => {
+    if (isEditing) {
+      const { coordinate } = e.nativeEvent;
+      setPolygonCoords((prev) => [...prev, coordinate]);
+    }
+  };
 
-  const [isInsideFence, setIsInsideFence] = useState(false);
+  const clearPolygon = () => setPolygonCoords([]);
+  const toggleEdit = () => setIsEditing((prev) => !prev);
 
-  // Simuleer de beweging van de kat     
+  // Simuleer kat die beweegt
   useEffect(() => {
     const interval = setInterval(() => {
       setCatLocation((prev) => ({
         latitude: prev.latitude + (Math.random() - 0.5) * 0.0002,
         longitude: prev.longitude + (Math.random() - 0.5) * 0.0002,
       }));
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Check of kat binnen een van de zones is
+  // Check of kat in polygon zit
   useEffect(() => {
-    const insideAnyZone = zones.some(zone => isPointInPolygon(catLocation, zone));
-    setIsInsideFence(insideAnyZone);
-    console.log("Kat binnen een geofence zone?", insideAnyZone);
-  }, [catLocation]);
+    if (polygonCoords.length >= 3) {
+      const result = isPointInPolygon(catLocation, polygonCoords);
+      setIsInside(result);
+      console.log("Kat is binnen zone?", result);
+    }
+  }, [catLocation, polygonCoords]);
 
   return (
     <View style={styles.container}>
@@ -52,30 +66,54 @@ export default function HomeScreen() {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
+        onPress={handleMapPress}
       >
-        {zones.map((zone, idx) => (
+        {/* Polygon tekenen */}
+        {polygonCoords.length > 0 && (
           <Polygon
-            key={idx}
-            coordinates={zone}
-            strokeColor="rgba(255,0,0,0.8)"
-            fillColor="rgba(255,0,0,0.3)"
+            coordinates={polygonCoords}
+            strokeColor="blue"
+            fillColor="rgba(0,0,255,0.2)"
             strokeWidth={2}
+          />
+        )}
+
+        {/* Polygonpunten */}
+        {polygonCoords.map((coord, index) => (
+          <Marker
+            key={index}
+            coordinate={coord}
+            pinColor="blue"
+            title={`Punt ${index + 1}`}
           />
         ))}
 
-        {/* Marker kat */}
+        {/* Kat marker */}
         <Marker
           coordinate={catLocation}
-          title="Pixel"
-          description="Locatie van je kat"
-          pinColor="orange"
+          title="Kat"
+          description="Simulatie van katlocatie"
+          pinColor={isInside ? "green" : "red"}
         />
       </MapView>
 
-      <View style={styles.statusBox}>
-        <Text style={{ fontWeight: "bold", color: isInsideFence ? "green" : "red" }}>
-          {isInsideFence ? "De kat is BINNEN de zone" : "De kat is BUITEN de zone!"}
-        </Text>
+      {/* Bediening */}
+      <View style={styles.controls}>
+        <Button
+          title={isEditing ? "✅ Stop tekenen" : "✏️ Start tekenen"}
+          onPress={toggleEdit}
+        />
+        <View style={{ height: 10 }} />
+        <Button title="🗑️ Wis polygon" onPress={clearPolygon} color="red" />
+        <View style={{ marginTop: 10 }}>
+          <Text style={styles.statusText}>
+            {polygonCoords.length < 3
+              ? "Minstens 3 punten nodig voor een zone"
+              : isInside
+              ? "✅ Kat is BINNEN de zone"
+              : "🚨 Kat is BUITEN de zone!"}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -87,13 +125,28 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height,
   },
-  statusBox: {
+  controls: {
     position: "absolute",
-    bottom: 150,
+    bottom: 80,
     left: 20,
+    right: 20,
     backgroundColor: "white",
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 12,
     elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+      },
+    }),
+  },
+  statusText: {
+    marginTop: 8,
+    textAlign: "center",
+    fontWeight: "500",
+    color: "#333",
   },
 });
