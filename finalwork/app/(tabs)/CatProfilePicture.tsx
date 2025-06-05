@@ -10,11 +10,12 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import SkipConfirmationModal from "@/components/SkipConfirmationModal";
 
 export default function CatProfilePicture() {
   const [image, setImage] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Vraag toestemming voor toegang tot galerij
   useEffect(() => {
     (async () => {
       const { status } =
@@ -28,7 +29,6 @@ export default function CatProfilePicture() {
     })();
   }, []);
 
-  // Afbeelding kiezen
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -43,11 +43,12 @@ export default function CatProfilePicture() {
   };
 
   const handleNext = () => {
-    router.push("/VolgendePagina"); // vervang met je volgende scherm
+    router.push("./index");
   };
 
-  const handleSkip = () => {
-    router.push("/VolgendePagina");
+  const handleSkipConfirmed = () => {
+    setShowModal(false);
+    router.push("./(tabs)/index");
   };
 
   return (
@@ -66,10 +67,17 @@ export default function CatProfilePicture() {
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.buttonText}>Volgende</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSkip}>
+
+        <TouchableOpacity onPress={() => setShowModal(true)}>
           <Text style={styles.skipText}>Overslaan</Text>
         </TouchableOpacity>
       </View>
+
+      <SkipConfirmationModal
+        visible={showModal}
+        onCancel={() => setShowModal(false)}
+        onConfirm={handleSkipConfirmed}
+      />
     </View>
   );
 }
