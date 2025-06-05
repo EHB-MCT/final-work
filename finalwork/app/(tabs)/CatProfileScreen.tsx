@@ -15,6 +15,8 @@ import { Picker } from "@react-native-picker/picker";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SkipConfirmationModal from "@/components/SkipConfirmationModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 export default function CatProfileScreen() {
   const [name, setName] = useState("");
@@ -24,9 +26,23 @@ export default function CatProfileScreen() {
   const [gender, setGender] = useState("M");
   const [showModal, setShowModal] = useState(false);
 
-  const handleNext = () => {
-    router.push("/CatProfilePicture");
+  const handleNext = async () => {
+  const profile = {
+    name,
+    birthday: birthday?.toISOString() ?? null,
+    breed,
+    gender,
   };
+
+  try {
+    await AsyncStorage.setItem("catProfile", JSON.stringify(profile));
+    console.log("Profiel opgeslagen:", profile);
+    router.push("/CatProfilePicture");
+  } catch (error) {
+    console.error("Fout bij opslaan profiel:", error);
+  }
+};
+
 
   const handleSkipConfirmed = () => {
     setShowModal(false);
