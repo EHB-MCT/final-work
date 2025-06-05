@@ -3,16 +3,23 @@ require('dotenv').config(); // Laad .env eerst
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static("uploads")); // voor foto’s
+
 
 // Routes
+
+// CatRoutes
 const catRoutes = require('../routes/cats');
 app.use('/api/cats', catRoutes);
+
+//CommunityRoutes 
+const communityRoutes = require("./routes/community");
+app.use("/api/community", communityRoutes);
 
 // Verbind met MongoDB
 mongoose
