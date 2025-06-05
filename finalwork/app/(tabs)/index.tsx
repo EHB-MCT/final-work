@@ -5,7 +5,7 @@ import MapView, { Marker } from "react-native-maps";
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <MapView
+      {/* <MapView
         style={styles.map}
         initialRegion={{
           latitude: 50.8503, // Brussels
@@ -19,7 +19,7 @@ export default function HomeScreen() {
           title="Pixel"
           description="Hier is je kat!"
         />
-      </MapView>
+      </MapView> */}
     </View>
   );
 }
