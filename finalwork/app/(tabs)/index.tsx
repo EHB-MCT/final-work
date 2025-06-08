@@ -58,7 +58,7 @@ export default function EditableGeofenceMap() {
 
   return (
     <View style={styles.container}>
-      <MapView
+      {/* <MapView
         style={styles.map}
         initialRegion={{
           latitude: 50.8503,

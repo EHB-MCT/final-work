@@ -1,45 +1,72 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { colors } from "@/constants/Colors";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+import TabBar from "enhanced-fluid-bottom-navigation-bar";
 
+import HomeScreen from "./index";
+import DashboardScreen from "./home";
+import MapScreen from "./map";
+
+const Tab = createBottomTabNavigator();
+
+export default function Layout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+    <Tab.Navigator
+      tabBar={(props) => (
+        <TabBar
+          backgroundColor={colors.primary}
+          selectColor={colors.primary}
+          tintColor={colors.secondary}
+          values={[
+            {
+              title: "Dashboard",
+              icon: "home",
+              iconSet: "Ionicons",
+              size: 24,
+              color: "red",
+            },
+            {
+              title: "Activiteit",
+              icon: "activity",
+              iconSet: "Feather",
+              size: 24,
+            },
+            {
+              title: "Map",
+              icon: "map",
+              iconSet: "Ionicons",
+              size: 24,
+
+              color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
+            },
+            {
+              title: "Community",
+              icon: "people-alt",
+              iconSet: "MaterialIcons",
+              size: 24,
+              color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
+            },
+            {
+              title: "Profiel",
+              icon: "cat",
+              iconSet: "FontAwesome5",
+              size: 24,
+              color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
+            },
+          ]}
+          onPress={(index: number) => {
+            const { name } = props.state.routes[index];
+            props.navigation.navigate(name);
+          }}
+        />
+      )}
+      screenOptions={{ headerShown: false }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Map" component={MapScreen} />
+    </Tab.Navigator>
   );
 }
