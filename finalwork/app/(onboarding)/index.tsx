@@ -10,6 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import BackgroundShape from "../../assets/slideShape.svg";
 import placholderImg from "../../assets/images/Vertical-Placeholder-Image.jpg"; // <-- need to replace these with actual images (3 total)
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 // TODO: make/photoshop images and replace these placeholder images
 
 // const { width } = Dimensions.get("window");
@@ -80,9 +81,12 @@ export default function Onboarding() {
         <Text style={styles.text}>{slides[currentIndex].text}</Text>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={handleNext}>
+        <PrimaryButton onPress={handleNext}>
+          {currentIndex < slides.length - 1 ? "Volgende" : "Laten we beginnen!"}
+        </PrimaryButton>
+        {/* <TouchableOpacity onPress={handleNext}>
           <Text style={styles.button}>Volgende</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <View style={styles.dots}>
         {slides.map((_, i) => (
@@ -90,7 +94,7 @@ export default function Onboarding() {
             key={i}
             style={[
               styles.dot,
-              { backgroundColor: i === currentIndex ? "#000" : "#ccc" },
+              { backgroundColor: i === currentIndex ? "#E1B048" : "#D9D9D9" },
             ]}
           />
         ))}
@@ -146,17 +150,17 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 20,
   },
-  button: {
-    fontSize: 16,
-    width: 300,
-    textAlign: "center",
-    color: "#fff",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#fff",
-    borderRadius: 5,
-    marginVertical: 10,
-  },
+  // button: {
+  //   fontSize: 16,
+  //   width: 300,
+  //   textAlign: "center",
+  //   color: "#fff",
+  //   padding: 10,
+  //   borderWidth: 1,
+  //   borderColor: "#fff",
+  //   borderRadius: 5,
+  //   marginVertical: 10,
+  // },
 
   topWrapper: {
     flex: 1,

@@ -33,12 +33,12 @@ export default function InputModal({
   const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
-    if (visible) setValue(initialValue); // Reset when opened
+    if (visible) setValue(initialValue);
   }, [visible, initialValue]);
 
   const handleSubmit = () => {
     onSubmit(value);
-    setValue(""); // optional: clear after submit
+    setValue("");
     onClose();
   };
 

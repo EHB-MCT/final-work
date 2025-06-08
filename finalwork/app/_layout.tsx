@@ -27,6 +27,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="(onboarding)/pairDevice" />
+        <Stack.Screen name="(onboarding)/QrScanner" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
