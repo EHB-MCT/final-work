@@ -4,6 +4,7 @@ const path = require("path");
 const CommunityPost = require("../models/CommunityPost");
 const router = express.Router();
 
+
 // Multer config voor foto-upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

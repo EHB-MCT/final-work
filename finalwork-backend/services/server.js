@@ -18,7 +18,7 @@ const catRoutes = require('../routes/cats');
 app.use('/api/cats', catRoutes);
 
 //CommunityRoutes 
-const communityRoutes = require("./routes/community");
+const communityRoutes = require("../routes/community");
 app.use("/api/community", communityRoutes);
 
 // Verbind met MongoDB

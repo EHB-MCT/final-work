@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const CommunityPostSchema = new mongoose.Schema({
   ownerName: String,
   catName: String,
-  image: String, // bestandsnaam van geüploade foto
+  imageUrl: String, // bestandsnaam van geüploade foto
   caption: String,
   likes: { type: Number, default: 0 },
   comments: [{ text: String, createdAt: Date }],
