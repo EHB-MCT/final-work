@@ -61,8 +61,8 @@ export default function EditableGeofenceMap() {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={Platform.OS === "android" ? undefined : "google"} // optional
-        customMapStyle={mapStyle} // Voeg aangepaste kaartstijl toe
+        provider={Platform.OS === "android" ? undefined : "google"}
+        customMapStyle={mapStyle}
         initialRegion={{
           latitude: 50.8503,
           longitude: 4.3517,

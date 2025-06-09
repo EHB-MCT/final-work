@@ -5,8 +5,8 @@ import { colors } from "@/constants/Colors";
 
 import TabBar from "enhanced-fluid-bottom-navigation-bar";
 
-import HomeScreen from "./index";
-import DashboardScreen from "./home";
+// import HomeScreen from "./index";
+import DashboardScreen from ".";
 import MapScreen from "./map";
 
 const Tab = createBottomTabNavigator();
@@ -64,7 +64,7 @@ export default function Layout() {
       )}
       screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={DashboardScreen} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
     </Tab.Navigator>
