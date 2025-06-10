@@ -15,8 +15,13 @@ import MapView, {
 } from "react-native-maps";
 import { isPointInPolygon } from "geolib";
 import mapStyle from "@/assets/mapStyle.json";
+import { router } from "expo-router";
 
 export default function EditableGeofenceMap() {
+   //lokaal testen
+  const [history, setHistory] = useState<(LatLng & { timestamp: Date })[]>([]);
+
+
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [catLocation, setCatLocation] = useState<LatLng>({
@@ -36,17 +41,24 @@ export default function EditableGeofenceMap() {
   const clearPolygon = () => setPolygonCoords([]);
   const toggleEdit = () => setIsEditing((prev) => !prev);
 
-  // Simuleer kat die beweegt
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCatLocation((prev) => ({
+ useEffect(() => {
+  const interval = setInterval(() => {
+    setCatLocation((prev) => {
+      const newLoc = {
         latitude: prev.latitude + (Math.random() - 0.5) * 0.0002,
         longitude: prev.longitude + (Math.random() - 0.5) * 0.0002,
-      }));
-    }, 4000);
+      };
 
-    return () => clearInterval(interval);
-  }, []);
+      // Voeg nieuwe locatie toe aan historiek
+      setHistory((prevHist) => [...prevHist, { ...newLoc, timestamp: new Date() }]);
+
+      return newLoc;
+    });
+  }, 4000);
+
+  return () => clearInterval(interval);
+}, []);
+
 
   // Check of kat in polygon zit
   useEffect(() => {
@@ -115,6 +127,17 @@ export default function EditableGeofenceMap() {
               : isInside
               ? "✅ Kat is BINNEN de zone"
               : "🚨 Kat is BUITEN de zone!"}
+            <Button
+  title="📅 Bekijk routehistoriek"
+  onPress={() => router.push({
+    pathname: "/RouteHistoryScreen",
+    params: {
+      data: JSON.stringify(history), // stuur history als string
+    }
+  })}
+/>
+
+
           </Text>
         </View>
       </View>
