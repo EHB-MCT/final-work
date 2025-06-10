@@ -1,6 +1,6 @@
 // TODO: change this file to index.tsx?
 import React from "react";
-import { StyleSheet, View, Dimensions, Platform } from "react-native";
+import { StyleSheet, View, Dimensions, Platform, Text } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { colors } from "@/constants/Colors";
 import mapStyle from "@/assets/mapStyle.json";
@@ -43,7 +43,7 @@ export default function HomeScreen() {
           description="Hier is je kat!"
         />
       </MapView>
-      <View style={styles.bottomContainer}>
+      <View style={styles.dataContainer}>
         <View style={styles.chartContainer}>
           <LineChart
             data={data}
@@ -53,6 +53,38 @@ export default function HomeScreen() {
             bezier
             style={{ borderRadius: 10 }}
           />
+        </View>
+        <View style={styles.bottomContainer}>
+          <View style={styles.activityContainer}>
+            <Text style={styles.activitySlot}>Activity 1</Text>
+            <Text style={styles.activitySlot}>Activity 2</Text>
+            <Text style={styles.activitySlot}>Activity 3</Text>
+            <Text style={styles.activitySlot}>Activity 4</Text>
+          </View>
+          <View style={styles.activityContainer}>
+            <LineChart
+              data={{
+                labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+                datasets: [
+                  {
+                    data: [20, 45, 28, 80, 99],
+                  },
+                ],
+              }}
+              width={150}
+              height={100}
+              chartConfig={{
+                backgroundColor: "#19162B",
+                backgroundGradientFrom: "#19162B",
+                backgroundGradientTo: "#19162B",
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              }}
+              bezier
+              style={{ borderRadius: 10, marginTop: 20 }}
+            />
+            {/* <Text style={styles.activitySlot}>Weekly Activity</Text> */}
+          </View>
         </View>
       </View>
     </View>
@@ -79,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 
-  bottomContainer: {
+  dataContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -89,5 +121,40 @@ const styles = StyleSheet.create({
     // top: -30,
     boxShadow: "0px -5px 10px rgba(0, 0, 0, 0.64)",
     height: Dimensions.get("window").height,
+  },
+
+  bottomContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    // backgroundColor: colors.background,
+    // backgroundColor: "rgba(255, 255, 255, 0.5)",
+    borderRadius: 10,
+    marginTop: 16,
+  },
+
+  activityContainer: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    height: 150,
+    marginVertical: 35,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    padding: 16,
+    marginHorizontal: 8,
+  },
+
+  activitySlot: {
+    color: "white",
+    fontSize: 16,
+    marginVertical: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    width: "100%",
+    borderLeftWidth: 3,
+    paddingLeft: 8,
+    borderLeftColor: colors.secondary,
   },
 });
