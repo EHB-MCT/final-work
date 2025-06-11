@@ -20,10 +20,36 @@ export default function EditableGeofenceMap() {
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [catLocation, setCatLocation] = useState<LatLng>({
-    latitude: 50.8503,
-    longitude: 4.3517,
+    latitude: 80.8503,
+    longitude: 9.3517,
   });
   const [isInside, setIsInside] = useState(true);
+
+  // Fetch cat location van je backend
+  const fetchCatLocation = async () => {
+    try {
+      const response = await fetch("http://192.168.0.119:5000/api/cat-locations");
+      const data = await response.json();
+      if (data.length > 0) {
+        // Stel de laatste locatie in (of pas aan voor meerdere katten)
+        const latest = data[data.length - 1];
+        setCatLocation({
+          latitude: latest.latitude,
+          longitude: latest.longitude,
+        });
+      }
+    } catch (error) {
+      console.error("Fout bij ophalen cat locatie:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCatLocation();
+
+    // Optioneel: periodiek ophalen
+    const interval = setInterval(fetchCatLocation, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Voeg polygonpunt toe bij tikken op kaart
   const handleMapPress = (e: MapPressEvent) => {
@@ -35,18 +61,6 @@ export default function EditableGeofenceMap() {
 
   const clearPolygon = () => setPolygonCoords([]);
   const toggleEdit = () => setIsEditing((prev) => !prev);
-
-  // Simuleer kat die beweegt
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCatLocation((prev) => ({
-        latitude: prev.latitude + (Math.random() - 0.5) * 0.0002,
-        longitude: prev.longitude + (Math.random() - 0.5) * 0.0002,
-      }));
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Check of kat in polygon zit
   useEffect(() => {
@@ -68,7 +82,7 @@ export default function EditableGeofenceMap() {
           longitude: 4.3517,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
-        }}
+        }} 
         onPress={handleMapPress}
       >
         {/* Polygon tekenen */}
