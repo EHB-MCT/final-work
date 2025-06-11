@@ -3,9 +3,9 @@ import {
   StyleSheet,
   View,
   Dimensions,
-  Button,
   Text,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import MapView, {
   Marker,
@@ -16,12 +16,10 @@ import MapView, {
 import { isPointInPolygon } from "geolib";
 import mapStyle from "@/assets/mapStyle.json";
 import { router } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function EditableGeofenceMap() {
-   //lokaal testen
   const [history, setHistory] = useState<(LatLng & { timestamp: Date })[]>([]);
-
-
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [catLocation, setCatLocation] = useState<LatLng>({
@@ -30,7 +28,6 @@ export default function EditableGeofenceMap() {
   });
   const [isInside, setIsInside] = useState(true);
 
-  // Voeg polygonpunt toe bij tikken op kaart
   const handleMapPress = (e: MapPressEvent) => {
     if (isEditing) {
       const { coordinate } = e.nativeEvent;
@@ -41,31 +38,27 @@ export default function EditableGeofenceMap() {
   const clearPolygon = () => setPolygonCoords([]);
   const toggleEdit = () => setIsEditing((prev) => !prev);
 
- useEffect(() => {
-  const interval = setInterval(() => {
-    setCatLocation((prev) => {
-      const newLoc = {
-        latitude: prev.latitude + (Math.random() - 0.5) * 0.0002,
-        longitude: prev.longitude + (Math.random() - 0.5) * 0.0002,
-      };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCatLocation((prev) => {
+        const newLoc = {
+          latitude: prev.latitude + (Math.random() - 0.5) * 0.0002,
+          longitude: prev.longitude + (Math.random() - 0.5) * 0.0002,
+        };
 
-      // Voeg nieuwe locatie toe aan historiek
-      setHistory((prevHist) => [...prevHist, { ...newLoc, timestamp: new Date() }]);
+        setHistory((prevHist) => [...prevHist, { ...newLoc, timestamp: new Date() }]);
 
-      return newLoc;
-    });
-  }, 4000);
+        return newLoc;
+      });
+    }, 4000);
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, []);
 
-
-  // Check of kat in polygon zit
   useEffect(() => {
     if (polygonCoords.length >= 3) {
       const result = isPointInPolygon(catLocation, polygonCoords);
       setIsInside(result);
-      console.log("Kat is binnen zone?", result);
     }
   }, [catLocation, polygonCoords]);
 
@@ -73,8 +66,8 @@ export default function EditableGeofenceMap() {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={Platform.OS === "android" ? undefined : "google"} // optional
-        customMapStyle={mapStyle} // Voeg aangepaste kaartstijl toe
+        provider={Platform.OS === "android" ? undefined : "google"}
+        customMapStyle={mapStyle}
         initialRegion={{
           latitude: 50.8503,
           longitude: 4.3517,
@@ -83,7 +76,6 @@ export default function EditableGeofenceMap() {
         }}
         onPress={handleMapPress}
       >
-        {/* Polygon tekenen */}
         {polygonCoords.length > 0 && (
           <Polygon
             coordinates={polygonCoords}
@@ -93,7 +85,6 @@ export default function EditableGeofenceMap() {
           />
         )}
 
-        {/* Polygonpunten */}
         {polygonCoords.map((coord, index) => (
           <Marker
             key={index}
@@ -103,7 +94,6 @@ export default function EditableGeofenceMap() {
           />
         ))}
 
-        {/* Kat marker */}
         <Marker
           coordinate={catLocation}
           title="Kat"
@@ -112,34 +102,44 @@ export default function EditableGeofenceMap() {
         />
       </MapView>
 
-      {/* Bediening */}
-      <View style={styles.controls}>
-        <Button
-          title={isEditing ? "✅ Stop tekenen" : "✏️ Start tekenen"}
+      {/* Icon Buttons rechts */}
+      <View style={styles.iconButtons}>
+        <TouchableOpacity
+          style={styles.iconButton}
           onPress={toggleEdit}
-        />
-        <View style={{ height: 10 }} />
-        <Button title="🗑️ Wis polygon" onPress={clearPolygon} color="red" />
-        <View style={{ marginTop: 10 }}>
-          <Text style={styles.statusText}>
-            {polygonCoords.length < 3
-              ? "Minstens 3 punten nodig voor een zone"
-              : isInside
-              ? "✅ Kat is BINNEN de zone"
-              : "🚨 Kat is BUITEN de zone!"}
-            <Button
-  title="📅 Bekijk routehistoriek"
-  onPress={() => router.push({
-    pathname: "/RouteHistoryScreen",
-    params: {
-      data: JSON.stringify(history), // stuur history als string
-    }
-  })}
-/>
+        >
+          <Ionicons name={isEditing ? "checkmark" : "pencil"} size={24} color="white" />
+        </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={clearPolygon}
+        >
+          <Ionicons name="trash" size={24} color="white" />
+        </TouchableOpacity>
 
-          </Text>
-        </View>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() =>
+            router.push({
+              pathname: "/RouteHistoryScreen",
+              params: { data: JSON.stringify(history) },
+            })
+          }
+        >
+          <MaterialCommunityIcons name="history" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Status onderaan */}
+      <View style={styles.statusBox}>
+        <Text style={styles.statusText}>
+          {polygonCoords.length < 3
+            ? "Minstens 3 punten nodig voor een zone"
+            : isInside
+            ? "✅ Kat is BINNEN de zone"
+            : "🚨 Kat is BUITEN de zone!"}
+        </Text>
       </View>
     </View>
   );
@@ -151,28 +151,34 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height,
   },
-  controls: {
+  iconButtons: {
     position: "absolute",
-    bottom: 80,
-    left: 20,
+    top: 100,
     right: 20,
+    gap: 16,
+    alignItems: "center",
+  },
+  iconButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#007aff",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
+  },
+  statusBox: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
     backgroundColor: "white",
     padding: 12,
     borderRadius: 12,
     elevation: 5,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
-      },
-    }),
   },
   statusText: {
-    marginTop: 8,
-    textAlign: "center",
     fontWeight: "500",
     color: "#333",
+    textAlign: "center",
   },
 });
