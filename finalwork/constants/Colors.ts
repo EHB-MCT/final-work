@@ -1,8 +1,8 @@
 export const colors = {
   // light: {
-  background: "#F0D5A8",
+  background: "#FFF8EA",
   primary: "#19162B",
-  secondary: "#E1B048",
+  secondary: "#F0D5A8",
   white: "#FFFFFF",
   // },
   // dark: {
