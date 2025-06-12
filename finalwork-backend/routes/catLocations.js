@@ -35,4 +35,16 @@ router.post("/", async (req, res) => {
   }
 });
 
+// DELETE alle cat locations
+router.delete("/", async (req, res) => {
+  try {
+    const result = await CatLocation.deleteMany({});
+    res.status(200).json({
+      message: `${result.deletedCount} cat locations verwijderd`,
+    });
+  } catch (error) {
+    console.error("Fout bij verwijderen:", error);
+    res.status(500).json({ message: "Fout bij verwijderen van cat locations" });
+  }
+});
 module.exports = router;

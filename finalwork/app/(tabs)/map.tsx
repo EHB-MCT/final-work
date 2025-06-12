@@ -23,8 +23,8 @@ export default function EditableGeofenceMap() {
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [catLocation, setCatLocation] = useState<LatLng>({
-    latitude: 80.8503,
-    longitude: 9.3517,
+    latitude: 50.904918,
+    longitude: 4.355563,
   });
   const [isInside, setIsInside] = useState(true);
 
@@ -82,8 +82,8 @@ export default function EditableGeofenceMap() {
         provider={Platform.OS === "android" ? undefined : "google"}
         customMapStyle={mapStyle}
         initialRegion={{
-          latitude: 50.8503,
-          longitude: 4.3517,
+          latitude: catLocation.latitude,
+          longitude: catLocation.longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
