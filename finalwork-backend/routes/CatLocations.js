@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const CatLocation = require("../models/CatLocation"); // jouw mongoose model
+const CatLocation = require("../models/CatLocation"); 
 
 // GET alle cat locations
 router.get("/", async (req, res) => {
@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
+ 
 
 // POST nieuwe cat location toevoegen
 router.post("/", async (req, res) => {
