@@ -37,12 +37,14 @@ export default function EditableGeofenceMap() {
       const data = await response.json();
       if (data.length > 0) {
         // Stel de laatste locatie in (of pas aan voor meerdere katten)
-        const latest = data[data.length - 1];
+        const latest = data[0];
+
         setCatLocation({
           latitude: latest.latitude,
           longitude: latest.longitude,
         });
       }
+      // console.log("Cat location fetched:", catLocation);
     } catch (error) {
       console.error("Fout bij ophalen cat locatie:", error);
     }
