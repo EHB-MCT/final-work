@@ -6,7 +6,7 @@ const CatLocation = require("../models/CatLocation");
 router.get("/", async (req, res) => {
   try {
     const catLocations = await CatLocation.find();
-    console.log("Gevonden cat locations:", catLocations);  // Log de data
+    console.log("Gevonden cat locations:", catLocations);
     res.json(catLocations);
   } catch (error) {
     console.error(error);
@@ -20,7 +20,6 @@ router.post("/", async (req, res) => {
   const catLocation = new CatLocation({
     latitude: req.body.latitude,
     longitude: req.body.longitude,
-    // andere velden als je die hebt
   });
 
   try {
@@ -30,5 +29,5 @@ router.post("/", async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
- 
+
 module.exports = router;
