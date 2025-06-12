@@ -28,7 +28,7 @@ export default function EditableGeofenceMap() {
   // Fetch cat location van je backend
   const fetchCatLocation = async () => {
     try {
-      const response = await fetch("http://192.168.0.119:5000/api/cat-locations");
+      const response = await fetch("https://final-work-7cqh.onrender.com/api/cat-locations");
       const data = await response.json();
       if (data.length > 0) {
         // Stel de laatste locatie in (of pas aan voor meerdere katten)
