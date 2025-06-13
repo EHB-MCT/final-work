@@ -10,6 +10,7 @@ import DashboardScreen from ".";
 import MapScreen from "./map";
 import ActivityScreen from "./activity";
 import Header from "@/components/ui/Header";
+import SettingsScreen from "./settings";
 
 const Tab = createBottomTabNavigator();
 
