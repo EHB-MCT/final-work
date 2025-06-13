@@ -63,10 +63,13 @@ ios/Pods/
 
 # Misc
 *.pem
-*.crt
-*.csr
-*.sublime-workspace
-*.sublime-project
 
-# Custom dev folders or files
-app-example/
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+app-example
+
+.env

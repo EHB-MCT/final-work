@@ -1,22 +1,49 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions, Platform } from "react-native";
-import HeaderTest from "@/assets/header.svg"; // Assuming you have a header SVG
+import { View, Image, StyleSheet, Dimensions } from "react-native";
+import HeaderSvg from "@/assets/header.svg";
+
+const { width } = Dimensions.get("window");
 
 export default function Header() {
   return (
-    <View style={styles.backgroundSvg}>
+    <View style={styles.container}>
       {/* Background SVG */}
-      <HeaderTest
-      // width={Dimensions.get("window").width}
-      // height={Dimensions.get("window").height * 0.15} // Adjust height as needed
-      />
+      <View style={styles.svgContainer}>
+        <HeaderSvg width={width} />
+      </View>
+
+      {/* Profile image */}
+      <View style={styles.profileContainer}>
+        <Image
+          // source={{ uri: "https://your-image-url.com/profile.jpg" }} // TODO: Replace with image (from storage)
+          style={styles.profileImage}
+        />
+      </View>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  backgroundSvg: {
+  container: {
     position: "absolute",
     top: 0,
+    width: "100%",
+    alignItems: "center",
     zIndex: 1,
+  },
+  svgContainer: {
+    width: "100%",
+  },
+  profileContainer: {
+    position: "absolute",
+    top: 40,
+    alignSelf: "center",
+  },
+  profileImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
 });
