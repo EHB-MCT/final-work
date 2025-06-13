@@ -37,12 +37,13 @@ const styles = StyleSheet.create({
   profileContainer: {
     position: "absolute",
     top: 40,
+    left: Dimensions.get("window").width / 2 - 45, // Center
     alignSelf: "center",
   },
   profileImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 90,
+    height: 90,
+    borderRadius: 55,
     borderWidth: 2,
     borderColor: "#fff",
   },
