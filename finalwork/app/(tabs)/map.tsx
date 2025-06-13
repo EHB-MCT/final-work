@@ -19,6 +19,8 @@ import mapStyle from "@/assets/mapStyle.json";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
+import { colors } from "@/constants/Colors";
+
 import { fetchLatestCatLocation } from "../services/apiCalls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -27,6 +29,7 @@ export default function EditableGeofenceMap() {
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [catImageUri, setCatImageUri] = useState<string | null>(null);
+  const [catName, setCatName] = useState<string | null>(null);
   const [catLocation, setCatLocation] = useState<LatLng>({
     latitude: 50.904918,
     longitude: 4.355563,
@@ -36,6 +39,12 @@ export default function EditableGeofenceMap() {
   useEffect(() => {
     AsyncStorage.getItem("profileImage")
       .then((uri) => uri && setCatImageUri(uri))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.getItem("catName")
+      .then((name) => name && setCatName(name))
       .catch(console.error);
   }, []);
 
@@ -181,8 +190,8 @@ export default function EditableGeofenceMap() {
           {polygonCoords.length < 3
             ? "Minstens 3 punten nodig voor een zone"
             : isInside
-            ? "✅ Kat is BINNEN de zone"
-            : "🚨 Kat is BUITEN de zone!"}
+            ? `${catName ? catName : "Kat"} is BINNEN de zone!`
+            : `${catName ? catName : "Kat"} is BUITEN de zone!`}
         </Text>
       </View>
     </View>
@@ -197,7 +206,7 @@ const styles = StyleSheet.create({
   },
   iconButtons: {
     position: "absolute",
-    top: 100,
+    top: 150,
     right: 20,
     gap: 16,
     alignItems: "center",
@@ -206,7 +215,8 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#007aff",
+    backgroundColor: colors.primary,
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,

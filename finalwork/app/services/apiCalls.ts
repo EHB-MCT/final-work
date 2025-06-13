@@ -3,6 +3,8 @@ export interface CatLocation {
   latitude: number;
   longitude: number;
   timestamp?: string;
+  jump?: number;
+  activityLevel?: number;
 }
 
 export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
@@ -18,6 +20,8 @@ export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
         latitude: latest.latitude,
         longitude: latest.longitude,
         timestamp: latest.timestamp,
+        jump: latest.jump,
+        activityLevel: latest.activityLevel,
       };
     }
 

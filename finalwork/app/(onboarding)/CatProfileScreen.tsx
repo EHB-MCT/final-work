@@ -11,7 +11,7 @@ import {
 import { RadioButton } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import SkipConfirmationModal from "@/components/SkipConfirmationModal";
 
 export default function CatProfileScreen() {
@@ -31,15 +31,9 @@ export default function CatProfileScreen() {
 
   const handleNext = async () => {
     try {
-      await SecureStore.setItemAsync(
-        "catProfile",
-        JSON.stringify({
-          name,
-          birthday: birthday?.toISOString() ?? "",
-          weight,
-          gender,
-        })
-      );
+      const profile = { name, birthday, weight, gender };
+      await AsyncStorage.setItem("catProfile", JSON.stringify(profile));
+      await AsyncStorage.setItem("catName", name);
       router.push("/CatProfilePicture");
     } catch (err) {
       console.error("Failed to save profile:", err);
