@@ -6,6 +6,7 @@ import {
   Text,
   Platform,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import MapView, {
   Marker,
@@ -19,16 +20,24 @@ import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { fetchLatestCatLocation } from "../services/apiCalls";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function EditableGeofenceMap() {
   const [history, setHistory] = useState<(LatLng & { timestamp: Date })[]>([]);
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [catImageUri, setCatImageUri] = useState<string | null>(null);
   const [catLocation, setCatLocation] = useState<LatLng>({
     latitude: 50.904918,
     longitude: 4.355563,
   });
   const [isInside, setIsInside] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem("profileImage")
+      .then((uri) => uri && setCatImageUri(uri))
+      .catch(console.error);
+  }, []);
 
   const fetchCatLocation = async () => {
     const latest = await fetchLatestCatLocation();
@@ -120,12 +129,23 @@ export default function EditableGeofenceMap() {
           />
         ))}
 
-        <Marker
-          coordinate={catLocation}
-          title="Kat"
-          description="Simulatie van katlocatie"
-          pinColor={isInside ? "green" : "red"}
-        />
+        <Marker coordinate={catLocation}>
+          {catImageUri ? (
+            <Image
+              source={{ uri: catImageUri }}
+              style={{ width: 50, height: 50, borderRadius: 25 }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                backgroundColor: "#ccc",
+              }}
+            />
+          )}
+        </Marker>
       </MapView>
 
       {/* Icon Buttons rechts */}

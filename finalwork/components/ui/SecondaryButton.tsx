@@ -24,8 +24,9 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
     >
       <Text
         style={{
-          fontSize: 16,
-          color: "#fff",
+          marginVertical: 10,
+          fontSize: 18,
+          color: "gray",
           textAlign: "center",
         }}
       >

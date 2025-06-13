@@ -6,22 +6,44 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
-import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import SkipConfirmationModal from "@/components/SkipConfirmationModal";
 
 export default function CatProfileScreen() {
   const [name, setName] = useState("");
-  const [birthday, setBirthday] = useState("");
-  const [breed, setBreed] = useState("");
+  const [birthday, setBirthday] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [weight, setWeight] = useState("");
   const [gender, setGender] = useState("M");
   const [showModal, setShowModal] = useState(false);
 
-  const handleNext = () => {
-    // Hier kan je eventueel data valideren of opslaan
-    router.push("/CatProfilePicture");
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setBirthday(selectedDate);
+    }
+  };
+
+  const handleNext = async () => {
+    try {
+      await SecureStore.setItemAsync(
+        "catProfile",
+        JSON.stringify({
+          name,
+          birthday: birthday?.toISOString() ?? "",
+          weight,
+          gender,
+        })
+      );
+      router.push("/CatProfilePicture");
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    }
   };
 
   const handleSkipConfirmed = () => {
@@ -46,34 +68,34 @@ export default function CatProfileScreen() {
 
       <View style={styles.question}>
         <Text style={styles.label}>Wanneer is je kat jarig?</Text>
-        <TextInput
+        <TouchableOpacity
           style={styles.input}
-          placeholder="dd-mm-jjjj"
-          placeholderTextColor="#999"
-          value={birthday}
-          onChangeText={setBirthday}
-          keyboardType="numeric"
-        />
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={{ color: birthday ? "#fff" : "#999" }}>
+            {birthday ? birthday.toLocaleDateString() : "Selecteer een datum"}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={birthday || new Date()}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={handleDateChange}
+          />
+        )}
       </View>
 
       <View style={styles.question}>
-        <Text style={styles.label}>Ken je het ras?</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={breed}
-            onValueChange={(itemValue) => setBreed(itemValue)}
-            style={styles.picker}
-            dropdownIconColor="#fff"
-          >
-            <Picker.Item label="Selecteer een ras..." value="" />
-            <Picker.Item label="Maine Coon" value="maine_coon" />
-            <Picker.Item label="Sphynx" value="sphynx" />
-            <Picker.Item label="Noorse Boskat" value="noorse_boskat" />
-            <Picker.Item label="Britse Korthaar" value="brits" />
-            <Picker.Item label="Europees Korthaar" value="europees" />
-            <Picker.Item label="Anders" value="anders" />
-          </Picker>
-        </View>
+        <Text style={styles.label}>Hoeveel weegt je kat? (in kg)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Bijv. 4.2"
+          placeholderTextColor="#999"
+          keyboardType="numeric"
+          value={weight}
+          onChangeText={setWeight}
+        />
       </View>
 
       <View style={styles.question}>
@@ -104,7 +126,10 @@ export default function CatProfileScreen() {
         <Text style={styles.buttonText}>Volgende</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => setShowModal(true)} style={styles.skipButton}>
+      <TouchableOpacity
+        onPress={() => setShowModal(true)}
+        style={styles.skipButton}
+      >
         <Text style={styles.skipText}>Overslaan</Text>
       </TouchableOpacity>
 
@@ -144,17 +169,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 6,
     color: "#fff",
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#666",
-    borderRadius: 6,
-    overflow: "hidden",
-  },
-  picker: {
-    height: 50,
-    color: "#fff",
-    backgroundColor: "#19162B",
   },
   radioContainer: {
     flexDirection: "row",

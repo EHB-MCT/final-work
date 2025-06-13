@@ -1,23 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Image, StyleSheet, Dimensions } from "react-native";
 import HeaderSvg from "@/assets/header.svg";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
 export default function Header() {
+  const [uri, setUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem("profileImage")
+      .then((saved) => {
+        if (saved) setUri(saved);
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <View style={styles.container}>
-      {/* Background SVG */}
       <View style={styles.svgContainer}>
         <HeaderSvg width={width} />
       </View>
-
-      {/* Profile image */}
       <View style={styles.profileContainer}>
-        <Image
-          // source={{ uri: "https://your-image-url.com/profile.jpg" }} // TODO: Replace with image (from storage)
-          style={styles.profileImage}
-        />
+        {uri && <Image source={{ uri }} style={styles.profileImage} />}
       </View>
     </View>
   );

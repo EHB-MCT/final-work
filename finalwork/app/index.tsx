@@ -12,7 +12,7 @@ export default function Index() {
       //   if (hasOnboarded === "true") {
       //     router.replace("/(tabs)");
       //   } else {
-      router.replace("/(tabs)");
+      router.replace("/(onboarding)");
       //   }
     };
 
