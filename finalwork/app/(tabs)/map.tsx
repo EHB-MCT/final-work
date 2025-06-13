@@ -18,6 +18,8 @@ import mapStyle from "@/assets/mapStyle.json";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
+import { fetchLatestCatLocation } from "../services/apiCalls";
+
 export default function EditableGeofenceMap() {
   const [history, setHistory] = useState<(LatLng & { timestamp: Date })[]>([]);
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
@@ -28,27 +30,38 @@ export default function EditableGeofenceMap() {
   });
   const [isInside, setIsInside] = useState(true);
 
-  // Fetch cat location van je backend
   const fetchCatLocation = async () => {
-    try {
-      const response = await fetch(
-        "https://final-work-7cqh.onrender.com/api/cat-locations"
-      );
-      const data = await response.json();
-      if (data.length > 0) {
-        // Stel de laatste locatie in (of pas aan voor meerdere katten)
-        const latest = data[0];
-
-        setCatLocation({
-          latitude: latest.latitude,
-          longitude: latest.longitude,
-        });
-      }
+    const latest = await fetchLatestCatLocation();
+    if (latest) {
       // console.log("Cat location fetched:", catLocation);
-    } catch (error) {
-      console.error("Fout bij ophalen cat locatie:", error);
+      setCatLocation({
+        latitude: latest.latitude,
+        longitude: latest.longitude,
+      });
     }
   };
+
+  // Fetch cat location van je backend
+  // const fetchCatLocation = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       "https://final-work-7cqh.onrender.com/api/cat-locations"
+  //     );
+  //     const data = await response.json();
+  //     if (data.length > 0) {
+  //       // Stel de laatste locatie in (of pas aan voor meerdere katten)
+  //       const latest = data[0];
+
+  //       setCatLocation({
+  //         latitude: latest.latitude,
+  //         longitude: latest.longitude,
+  //       });
+  //     }
+  //     console.log("Cat location fetched:", catLocation);
+  //   } catch (error) {
+  //     console.error("Fout bij ophalen cat locatie:", error);
+  //   }
+  // };
 
   useEffect(() => {
     fetchCatLocation();

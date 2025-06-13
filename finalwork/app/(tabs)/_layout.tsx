@@ -8,6 +8,7 @@ import TabBar from "enhanced-fluid-bottom-navigation-bar";
 // import HomeScreen from "./index";
 import DashboardScreen from ".";
 import MapScreen from "./map";
+import ActivityScreen from "./activity";
 import Header from "@/components/ui/Header";
 
 const Tab = createBottomTabNavigator();
@@ -43,22 +44,18 @@ export default function Layout() {
                 icon: "map",
                 iconSet: "Ionicons",
                 size: 24,
-
-                color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
               },
               {
                 title: "Community",
                 icon: "people-alt",
                 iconSet: "MaterialIcons",
                 size: 24,
-                color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
               },
               {
                 title: "Profiel",
                 icon: "cat",
                 iconSet: "FontAwesome5",
                 size: 24,
-                color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
               },
             ]}
             onPress={(index: number) => {
@@ -69,8 +66,10 @@ export default function Layout() {
         )}
         screenOptions={{ headerShown: false }}
       >
-        <Tab.Screen name="Home" component={DashboardScreen} />
+        {/* <Tab.Screen name="Home" component={DashboardScreen} /> */}
         <Tab.Screen name="Dashboard" component={DashboardScreen} />
+        <Tab.Screen name="Activiteit" component={ActivityScreen} />
+
         <Tab.Screen name="Map" component={MapScreen} />
       </Tab.Navigator>
     </>
