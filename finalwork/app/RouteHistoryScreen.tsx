@@ -13,6 +13,9 @@ import {
 import MapView, { Polyline, Marker } from "react-native-maps";
 import { getDistance } from "geolib";
 import { format } from "date-fns";
+import { colors } from "@/constants/Colors";
+
+import mapStyle from "@/assets/mapStyle.json";
 
 interface LocationPoint {
   latitude: number;
@@ -21,7 +24,9 @@ interface LocationPoint {
 }
 
 export default function RouteHistoryScreen() {
-  const [allData, setAllData] = useState<{ [date: string]: LocationPoint[] }>({});
+  const [allData, setAllData] = useState<{ [date: string]: LocationPoint[] }>(
+    {}
+  );
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -29,7 +34,9 @@ export default function RouteHistoryScreen() {
 
   const fetchCatHistory = async () => {
     try {
-      const response = await fetch("https://final-work-7cqh.onrender.com/api/cat-locations");
+      const response = await fetch(
+        "https://final-work-7cqh.onrender.com/api/cat-locations"
+      );
       const data = await response.json();
 
       if (Array.isArray(data)) {
@@ -70,7 +77,8 @@ export default function RouteHistoryScreen() {
       const current = { latitude: point.latitude, longitude: point.longitude };
       if (
         filtered.length === 0 ||
-        getDistance(filtered[filtered.length - 1], current) > MIN_DISTANCE_METERS
+        getDistance(filtered[filtered.length - 1], current) >
+          MIN_DISTANCE_METERS
       ) {
         filtered.push(current);
       }
@@ -97,6 +105,8 @@ export default function RouteHistoryScreen() {
   return (
     <View style={styles.container}>
       <MapView
+        provider={Platform.OS === "android" ? undefined : "google"}
+        customMapStyle={mapStyle}
         style={styles.map}
         region={
           routePoints.length > 0
@@ -116,9 +126,21 @@ export default function RouteHistoryScreen() {
       >
         {routePoints.length >= 2 && (
           <>
-            <Polyline coordinates={routePoints} strokeColor="#FF7F50" strokeWidth={3} />
-            <Marker coordinate={routePoints[0]} title="Start" pinColor="green" />
-            <Marker coordinate={routePoints[routePoints.length - 1]} title="Einde" pinColor="red" />
+            <Polyline
+              coordinates={routePoints}
+              strokeColor="#FF7F50"
+              strokeWidth={3}
+            />
+            <Marker
+              coordinate={routePoints[0]}
+              title="Start"
+              pinColor="green"
+            />
+            <Marker
+              coordinate={routePoints[routePoints.length - 1]}
+              title="Einde"
+              pinColor="red"
+            />
           </>
         )}
       </MapView>
@@ -129,7 +151,9 @@ export default function RouteHistoryScreen() {
           style={styles.selectButton}
           onPress={() => setModalVisible(true)}
         >
-          <Text style={styles.selectButtonText}>{selectedDate || "Selecteer een datum"}</Text>
+          <Text style={styles.selectButtonText}>
+            {selectedDate || "Selecteer een datum"}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -231,7 +255,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   selectButton: {
-    backgroundColor: "#007aff",
+    backgroundColor: colors.primary,
     borderRadius: 6,
     paddingVertical: 10,
     paddingHorizontal: 15,

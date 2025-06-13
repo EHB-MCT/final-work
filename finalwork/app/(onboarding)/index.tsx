@@ -9,7 +9,9 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import BackgroundShape from "../../assets/slideShape.svg";
-import placholderImg from "../../assets/images/Vertical-Placeholder-Image.jpg"; // <-- need to replace these with actual images (3 total)
+import chartImg from "../../assets/images/chartImg.jpg";
+import mapImg from "../../assets/images/mapImg.jpg";
+import geofenceImg from "../../assets/images/geofenceImg.jpg";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 // TODO: make/photoshop images and replace these placeholder images
 
@@ -19,17 +21,17 @@ const slides = [
   {
     title: "Volg je kat",
     text: "Zie in realtime waar je kat zich bevindt – altijd en overal.",
-    image: placholderImg,
+    image: mapImg,
   },
   {
     title: "Bekijk statistieken",
-    text: "Volg hoeveel je kat beweegt, rust en speelt – allemaal overzichtelijk.",
-    image: placholderImg,
+    text: "Volg hoeveel je kat beweegt en rust en speelt – allemaal overzichtelijk.",
+    image: chartImg,
   },
   {
     title: "Altijd op de hoogte",
     text: "Van weinig beweging tot nachtelijke avonturen – je krijgt een seintje",
-    image: placholderImg,
+    image: geofenceImg,
   },
 ];
 
@@ -69,7 +71,7 @@ export default function Onboarding() {
           resizeMode="contain"
           style={{
             width: Dimensions.get("window").width,
-            height: 350,
+            height: 400,
             marginBottom: 50,
           }}
         />
