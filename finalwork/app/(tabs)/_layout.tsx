@@ -8,6 +8,7 @@ import TabBar from "enhanced-fluid-bottom-navigation-bar";
 import HomeScreen from "./index";
 import DashboardScreen from "./home";
 import MapScreen from "./map";
+import SettingsScreen from "./settings"; 
 
 const Tab = createBottomTabNavigator();
 
@@ -41,13 +42,13 @@ export default function Layout() {
 
               color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
             },
-            {
-              title: "Community",
-              icon: "people-alt",
-              iconSet: "MaterialIcons",
-              size: 24,
-              color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
-            },
+           {
+             title: "Instellingen",
+            icon: "settings",
+            iconSet: "Ionicons",
+            size: 24,
+            color: (focused: boolean) => (focused ? "#E1B048" : "#888888"),
+        },
             {
               title: "Profiel",
               icon: "cat",
@@ -67,6 +68,7 @@ export default function Layout() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
