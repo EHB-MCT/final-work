@@ -18,7 +18,6 @@ import { colors } from "@/constants/Colors";
 type RootStackParamList = {
   "(onboarding)/QrScanner": undefined;
   "(tabs)/CatProfileScreen": undefined;
-  // add other routes here if needed
 };
 
 export default function PairDeviceScreen() {
@@ -37,8 +36,6 @@ export default function PairDeviceScreen() {
     if (value === "123") {
       router.push("/CatProfileScreen");
     }
-
-    // Add your logic here to pair the device
   };
   return (
     <View style={styles.container}>
