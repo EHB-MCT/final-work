@@ -16,13 +16,14 @@ router.get("/", async (req, res) => {
 
 // ✅ POST nieuwe cat location toevoegen
 router.post("/", async (req, res) => {
-  const { latitude, longitude, jump, activityLevel } = req.body;
+  const { latitude, longitude, jump, activityLevel,timestamp } = req.body;
 
   const catLocation = new CatLocation({
     latitude,
     longitude,
     jump,
     activityLevel,
+    timestamp,
   });
 
   try {
