@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, Button } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { router } from "expo-router";
 
 export default function QRScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scannedData, setScannedData] = useState<string | null>(null);
+  const [lastScannedAt, setLastScannedAt] = useState<number>(0);
 
   useEffect(() => {
     if (!permission) {
@@ -22,9 +24,14 @@ export default function QRScannerScreen() {
   }
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
-    setScannedData(data);
-    console.log("Scanned data:", data);
-    // TODO: compare to db code and navigate (or get error)
+    const now = Date.now();
+    if (now - lastScannedAt < 2000) return;
+
+    setLastScannedAt(now);
+    console.log("Scanned:", data);
+    if (data === "123") {
+      router.push("/CatProfileScreen");
+    }
   };
 
   return (

@@ -57,7 +57,7 @@ export default function PairDeviceScreen() {
           width={Dimensions.get("window").width}
           // style={styles.backgroundSvg}
         /> */}
-          <QRCode value="1e156720" size={200} />
+          <QRCode value="123" size={200} />
         </TouchableOpacity>
 
         <SecondaryButton onPress={openInput}>

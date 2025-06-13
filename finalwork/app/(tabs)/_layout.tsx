@@ -47,8 +47,8 @@ export default function Layout() {
                 size: 24,
               },
               {
-                title: "Community",
-                icon: "people-alt",
+                title: "Instellingen",
+                icon: "settings",
                 iconSet: "MaterialIcons",
                 size: 24,
               },
@@ -72,6 +72,7 @@ export default function Layout() {
         <Tab.Screen name="Activiteit" component={ActivityScreen} />
 
         <Tab.Screen name="Map" component={MapScreen} />
+        <Tab.Screen name="Instellingen" component={SettingsScreen} />
       </Tab.Navigator>
     </>
   );
