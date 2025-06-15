@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useState, useCallback } from "react";
 import { View, Image, StyleSheet, Dimensions } from "react-native";
 import HeaderSvg from "@/assets/header.svg";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -8,13 +9,15 @@ const { width } = Dimensions.get("window");
 export default function Header() {
   const [uri, setUri] = useState<string | null>(null);
 
-  useEffect(() => {
-    AsyncStorage.getItem("profileImage")
-      .then((saved) => {
-        if (saved) setUri(saved);
-      })
-      .catch(console.error);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem("profileImage")
+        .then((saved) => {
+          if (saved) setUri(saved);
+        })
+        .catch(console.error);
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
