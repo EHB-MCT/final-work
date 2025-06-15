@@ -24,6 +24,12 @@ import { colors } from "@/constants/Colors";
 import { fetchLatestCatLocation } from "../services/apiCalls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// import "../../notificationManager";
+//
+import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
+import { GEOFENCE_TASK } from "../../notificationManager";
+
 export default function EditableGeofenceMap() {
   const [history, setHistory] = useState<(LatLng & { timestamp: Date })[]>([]);
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
@@ -59,28 +65,6 @@ export default function EditableGeofenceMap() {
     }
   };
 
-  // Fetch cat location van je backend
-  // const fetchCatLocation = async () => {
-  //   try {
-  //     const response = await fetch(
-  //       "https://final-work-7cqh.onrender.com/api/cat-locations"
-  //     );
-  //     const data = await response.json();
-  //     if (data.length > 0) {
-  //       // Stel de laatste locatie in (of pas aan voor meerdere katten)
-  //       const latest = data[0];
-
-  //       setCatLocation({
-  //         latitude: latest.latitude,
-  //         longitude: latest.longitude,
-  //       });
-  //     }
-  //     console.log("Cat location fetched:", catLocation);
-  //   } catch (error) {
-  //     console.error("Fout bij ophalen cat locatie:", error);
-  //   }
-  // };
-
   useEffect(() => {
     fetchCatLocation();
 
@@ -105,6 +89,29 @@ export default function EditableGeofenceMap() {
       setIsInside(result);
     }
   }, [catLocation, polygonCoords]);
+
+  useEffect(() => {
+    (async () => {
+      if (polygonCoords.length < 3) return;
+      const { status: fg } = await Location.requestForegroundPermissionsAsync();
+      const { status: bg } = await Location.requestBackgroundPermissionsAsync();
+      await Notifications.requestPermissionsAsync();
+
+      if (fg === "granted" && bg === "granted") {
+        const region = {
+          identifier: "catZone",
+          latitude: polygonCoords[0].latitude,
+          longitude: polygonCoords[0].longitude,
+          radius: 100,
+          notifyOnExit: true,
+          notifyOnEnter: false,
+        };
+        await Location.startGeofencingAsync(GEOFENCE_TASK, [region]);
+      } else {
+        console.warn("Geofence/Notification permissions denied.");
+      }
+    })();
+  }, [polygonCoords]);
 
   return (
     <View style={styles.container}>

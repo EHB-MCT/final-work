@@ -11,6 +11,7 @@ import MapScreen from "./map";
 import ActivityScreen from "./activity";
 import Header from "@/components/ui/Header";
 import SettingsScreen from "./settings";
+import 
 
 const Tab = createBottomTabNavigator();
 
@@ -73,6 +74,7 @@ export default function Layout() {
 
         <Tab.Screen name="Map" component={MapScreen} />
         <Tab.Screen name="Instellingen" component={SettingsScreen} />
+        <Tab.Screen name="Profiel" component={DashboardScreen} />
       </Tab.Navigator>
     </>
   );

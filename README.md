@@ -1,21 +1,25 @@
-# <span style="font-family: 'JetBrains Mono', monospace;">Meowtracks</span>
+<!-- # <span style="font-family: 'JetBrains Mono', monospace;">Meowtracks</span> -->
 
----
+<!-- logo image (image folder) -->
+
+<!-- ![Meowtracks Logo](/finalwork/assets/logo.svg) -->
+
+## <img src="finalwork/assets/logo.svg" alt="Meowtracks Logo" width="500" style="display: block; margin: 0 auto;" />
 
 ## 📜 Description
 
-Meowtracks is een slimme GPS- en bewegingsmonitor voor katten, ontworpen om real-time locatiegegevens, activiteitsniveaus en afwijkende bewegingspatronen bij te houden. Het systeem stuurt data van een ESP32-gebaseerde T-Beam rechtstreeks via WiFi naar een Node.js-backend met MongoDB-opslag. Zo kunnen kattenbaasjes op tijd gewaarschuwd worden voor mogelijke gezondheidsrisico’s of gevaarlijke situaties.
+Meowtracks is a smart GPS and activity tracker for cats, designed to monitor real-time location, activity levels, and abnormal movement patterns. The system sends data from an ESP32-based T-Beam directly via WiFi to a Node.js backend with MongoDB storage. This allows cat owners to receive timely alerts about potential health risks or dangerous situations.
 
 ---
 
 ## ⚙️ Core features
 
-- 🐾 **Real-time locatiebepaling via GNSS**
-- 📊 **Activiteitstracking met behulp van een versnellingssensor (MPU)**
-- ⚠️ **Analyse van afwijkende bewegingspatronen**
-- 🌐 **Directe dataoverdracht via WiFi (zonder LoRa)**
-- 📡 **Visualisatie via een mobiele app/webinterface**
-- 🐈 **Gebruiksvriendelijke en kattenvriendelijke hardwarebehuizing**
+- 🐾 **Real-time location tracking via GNSS**
+- 📊 **Activity monitoring using an accelerometer (MPU)**
+- ⚠️ **Detection and analysis of abnormal movement patterns**
+- 🌐 **Direct data transmission over WiFi (no LoRa)**
+- 📡 **Visualization through a mobile app**
+- 🐈 **User-friendly and cat-friendly hardware enclosure**
 
 ---
 
@@ -24,7 +28,7 @@ Meowtracks is een slimme GPS- en bewegingsmonitor voor katten, ontworpen om real
 - **Hardware:** LilyGO T-Beam v1.2 (ESP32 + GNSS + MPU6050)
 - **Backend:** Node.js + Express
 - **Database:** MongoDB (cloud)
-- **Frontend:** React Native (voor mobiele interface)
+- **Frontend:** React Native (for mobile interface)
 - **Protocol:** HTTP over WiFi
 
 ---
@@ -32,20 +36,27 @@ Meowtracks is een slimme GPS- en bewegingsmonitor voor katten, ontworpen om real
 ## 📂 Folder structure
 
 ```
-/meowtracks
-│
-├── /backend         # Node.js server
-│   ├── routes       # API endpoints
-│   ├── models       # Mongoose models
-│   └── controllers  # Logic handlers
-│
-├── /firmware        # Arduino/ESP32 firmware for the T-Beam
-│
-├── /mobile-app      # React Native frontend
-│
-├── /docs            # Handleiding, documentatie en presentaties
-│
-└── README.md        # Projectbeschrijving
+
+final-work/
+├── finalwork-backend/
+│ ├── src/
+│ ├── .env.example
+│ ├── package.json
+│ └── README.md
+├── esp32-firmware/
+│ ├── src/
+│ ├── platformio.ini
+│ └── README.md
+├── finalwork/
+│ ├── assets/
+│ ├── src/
+│ ├── app.json
+│ ├── package.json
+│ └── README.md
+├── README.md
+
+
+
 ```
 
 ---
@@ -61,7 +72,7 @@ Meowtracks is een slimme GPS- en bewegingsmonitor voor katten, ontworpen om real
 ### 2. Backend (Node.js)
 
 ```bash
-cd backend
+cd finalwork-backend
 npm install
 npm run dev
 ```
@@ -71,18 +82,23 @@ Zorg ervoor dat `.env` een geldige MongoDB URI bevat.
 ### 3. Mobiele app
 
 ```bash
-cd mobile-app
+cd final-work
 npm install
-npx expo start
+npx expo start // using the Expo Go app on your mobile device
 ```
 
 ---
 
 ## 📸 Screenshots and media
 
-Voeg hier mockups, video’s of foto’s toe van het systeem in werking, eventueel met GIF's of Figma-previews.
+<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 50px;">
+<img src="finalwork/assets/images/mapImg.jpg" alt="Meowtracks App Screenshot" width="300" />
+<img src="finalwork/assets/images/geofenceImg.jpg" alt="Meowtracks App Screenshot" width="300"/>
+<img src="finalwork/assets/images/chartImg.jpg" alt="Meowtracks App Screenshot" width="300"/>
 
----
+## </div>
+
+<img src="finalwork/assets/images/hardware/tbeam-img.png" alt="Meowtracks App Screenshot" width="900" style="display: block; margin: 0 auto;" />
 
 ## 📚 Resources
 
@@ -115,9 +131,21 @@ Voeg hier mockups, video’s of foto’s toe van het systeem in werking, eventue
   Gebruik van Marker met custom images:  
   https://github.com/react-native-maps/react-native-maps/blob/master/docs/marker.md#custom-markers
 
-- **React Native UI en styling tips**  
+- **React Native UI and styling tips**  
   Styling en positionering (flexbox en absolute positioning):  
   https://reactnative.dev/docs/layout-props
+
+- **React Native maps - custom map styling**
+  https://chatgpt.com/share/684f1125-52c4-8008-bcd6-825bc86b809d
+
+- **Arduino interpretation of NMEA sentences**
+  https://chatgpt.com/share/684f11cf-0f78-8008-b088-f33134470728
+
+- **Persononal Reddit post asking for help with fixing our T-Beam (power was being cuf off when turning the device on)**
+  https://www.reddit.com/r/meshtastic/comments/1kr69ek/did_i_brick_my_t_beam_newbie_question/
+
+- **Advice regarding the T-Beam's battery and gps antenna**
+  https://chatgpt.com/share/684f13ba-d6a8-8008-a7c8-8ef43ab9f3e9
 
 ---
 

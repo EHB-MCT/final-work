@@ -1,3 +1,6 @@
+// code for sending GPS coordinates from a T-Beam device to a server (HTTP POST request -> MonogDB)
+
+
 #include <XPowersLib.h>
 #include <TinyGPSPlus.h>
 #include <WiFi.h>
