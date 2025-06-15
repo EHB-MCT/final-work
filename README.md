@@ -147,6 +147,9 @@ npx expo start // using the Expo Go app on your mobile device
 - **Advice regarding the T-Beam's battery and gps antenna**
   https://chatgpt.com/share/684f13ba-d6a8-8008-a7c8-8ef43ab9f3e9
 
+- **Navigation bar**
+- https://github.com/valisoftworks/Enhanced-Fluid-Bottom-Navigation-Bar
+
 ---
 
 ## 🧑‍💻 Authors
