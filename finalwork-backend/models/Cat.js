@@ -8,7 +8,13 @@ const catSchema = new mongoose.Schema({
     latitude: Number,
     longitude: Number,
   },
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
+
+
+  nieuwsgierig: { type: Boolean, default: false },
+  chill: { type: Boolean, default: false },
+  probleem: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model('Cat', catSchema);
+ 
