@@ -10,7 +10,7 @@ const GEOFENCE_ZONE: GeofenceZone = {
 };
 
 const LOCATION_KEY = "cat_location_history";
-const PRECISION = 0.0002; // ~20m nauwkeurigheid
+const PRECISION = 0.0002; 
 
 function roundCoord(coord: number) {
   return Math.round(coord / PRECISION) * PRECISION;
@@ -39,7 +39,7 @@ export default function CatGeoFence() {
       // Locatie opslaan in AsyncStorage
       try {
         const historyRaw = await AsyncStorage.getItem(LOCATION_KEY);
-        const history = historyRaw ? JSON.parse(historyRaw) : {};
+        const history: Record<string, number> = historyRaw ? JSON.parse(historyRaw) as Record<string, number> : {};
 
         const key = toKey(data);
         history[key] = (history[key] || 0) + 1;
