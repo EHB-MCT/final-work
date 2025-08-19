@@ -22,7 +22,7 @@ export default function Header() {
   return (
     <View style={styles.container}>
       <View style={styles.svgContainer}>
-        <HeaderSvg width={width} />
+        {/* <HeaderSvg width={width} /> */}
       </View>
       <View style={styles.profileContainer}>
         {uri && <Image source={{ uri }} style={styles.profileImage} />}

@@ -6,6 +6,7 @@ import {
   Text,
   Image,
   Platform,
+  ImageBackground,
 } from "react-native";
 import MapView, { Marker, LatLng } from "react-native-maps";
 import { LineChart } from "react-native-chart-kit";
@@ -94,6 +95,18 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <ImageBackground
+        source={require("../../assets/images/greenBlobBg.png")}
+        style={StyleSheet.absoluteFill} // fills the entire container
+        resizeMode="cover"
+      >
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: "rgba(0,0,0,0.42)" },
+          ]}
+        />
+      </ImageBackground>
       <MapView
         provider={Platform.OS === "android" ? undefined : "google"}
         customMapStyle={mapStyle}
@@ -125,8 +138,8 @@ export default function HomeScreen() {
         </Marker>
       </MapView>
 
-      <View style={styles.dataContainer}>
-        <View style={styles.chartContainer}>
+      {/* <View style={styles.dataContainer}> */}
+      {/* <View style={styles.chartContainer}>
           <LineChart
             data={chartData}
             width={Dimensions.get("window").width - 32}
@@ -140,9 +153,9 @@ export default function HomeScreen() {
             bezier
             style={{ borderRadius: 10 }}
           />
-        </View>
+        </View> */}
 
-        <View style={styles.bottomContainer}>
+      {/* <View style={styles.bottomContainer}>
           <View style={styles.activityContainer}>
             <Text style={styles.activitySlot}>Activity 1</Text>
             <Text style={styles.activitySlot}>Activity 2</Text>
@@ -173,8 +186,8 @@ export default function HomeScreen() {
               style={{ borderRadius: 10, marginTop: 20 }}
             />
           </View>
-        </View>
-      </View>
+        </View> 
+      </View> */}
     </View>
   );
 }
@@ -230,5 +243,8 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     paddingLeft: 8,
     borderLeftColor: colors.secondary,
+  },
+  background: {
+    flex: 1,
   },
 });
