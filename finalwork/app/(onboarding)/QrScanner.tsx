@@ -30,7 +30,7 @@ export default function QRScannerScreen() {
     setLastScannedAt(now);
     console.log("Scanned:", data);
     if (data === "123") {
-      router.push("/CatProfileScreen");
+      router.push("(onboarding)/CatProfileIntro");
     }
   };
 

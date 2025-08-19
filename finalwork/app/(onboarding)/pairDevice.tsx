@@ -17,7 +17,7 @@ import { colors } from "@/constants/Colors";
 
 type RootStackParamList = {
   "(onboarding)/QrScanner": undefined;
-  "(tabs)/CatProfileScreen": undefined;
+  "(tabs)/CatProfileIntro": undefined;
 };
 
 export default function PairDeviceScreen() {
@@ -34,7 +34,7 @@ export default function PairDeviceScreen() {
     setDeviceId(value);
 
     if (value === "123") {
-      router.push("/CatProfileScreen");
+      router.push("/CatProfileIntro");
     }
   };
   return (

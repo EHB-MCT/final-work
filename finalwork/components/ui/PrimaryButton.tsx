@@ -17,10 +17,18 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       style={{
         width: 300,
         padding: 10,
-        borderWidth: 1,
-        borderColor: "#fff",
         borderRadius: 5,
         alignItems: "center",
+        backgroundColor: "#FD9003",
+        // dropshadow
+        shadowColor: "#FD9003",
+        shadowOffset: {
+          width: 0,
+          height: 0,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 2,
         // marginVertical: 10,
       }}
     >

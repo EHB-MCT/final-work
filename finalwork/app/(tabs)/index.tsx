@@ -99,6 +99,7 @@ export default function HomeScreen() {
         customMapStyle={mapStyle}
         style={styles.map}
         initialRegion={{
+          // 50.841671, "longitude": 4.323001
           latitude: catLocation.latitude,
           longitude: catLocation.longitude,
           latitudeDelta: 0.01,
