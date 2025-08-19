@@ -11,10 +11,11 @@ const catSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 
 
-  nieuwsgierig: { type: Boolean, default: false },
-  chill: { type: Boolean, default: false },
-  probleem: { type: Boolean, default: false },
+  status: { 
+    type: String, 
+    enum: ["nieuwsgierig", "chill", "probleem"], 
+    default: "chill" 
+  }
 });
 
 module.exports = mongoose.model('Cat', catSchema);
- 

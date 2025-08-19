@@ -49,34 +49,24 @@ function computeSleep(activity: DataPoint[], thresholdMin = 30) {
 }
 
 export default function ActivityScreen() {
-  const [active, setActive] = useState<
-    "sleep" | "move" | "jump" | "nieuwsgierig" | "chill" | "probleem"
-  >("sleep");
+  const [active, setActive] = useState<"sleep" | "move" | "jump" | "status">(
+    "sleep"
+  );
 
   const [activityData, setActivityData] = useState<DataPoint[]>([]);
   const [jumpData, setJumpData] = useState<DataPoint[]>([]);
-  const [nieuwsgierigData, setNieuwsgierigData] = useState<DataPoint[]>([]);
-  const [chillData, setChillData] = useState<DataPoint[]>([]);
-  const [probleemData, setProbleemData] = useState<DataPoint[]>([]);
+  const [statusData, setStatusData] = useState<DataPoint[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const keys = [
-          "activityData",
-          "jumpData",
-          "nieuwsgierigData",
-          "chillData",
-          "probleemData",
-        ];
+        const keys = ["activityData", "jumpData", "statusData"];
 
-        const [act, jump, nieuwsg, chill, probleem] = await AsyncStorage.multiGet(keys);
+        const [act, jump, status] = await AsyncStorage.multiGet(keys);
 
         if (act[1]) setActivityData(JSON.parse(act[1]));
         if (jump[1]) setJumpData(JSON.parse(jump[1]));
-        if (nieuwsg[1]) setNieuwsgierigData(JSON.parse(nieuwsg[1]));
-        if (chill[1]) setChillData(JSON.parse(chill[1]));
-        if (probleem[1]) setProbleemData(JSON.parse(probleem[1]));
+        if (status[1]) setStatusData(JSON.parse(status[1]));
       } catch (e) {
         console.error("Fout bij laden uit AsyncStorage", e);
       }
@@ -106,18 +96,23 @@ export default function ActivityScreen() {
             }
           };
 
-          await appendData(activityData, loc.activityLevel ?? 0, "activityData", setActivityData);
+          await appendData(
+            activityData,
+            loc.activityLevel ?? 0,
+            "activityData",
+            setActivityData
+          );
           await appendData(jumpData, loc.jump ?? 0, "jumpData", setJumpData);
 
-          if (loc.nieuwsgierig !== undefined) {
-            await appendData(nieuwsgierigData, loc.nieuwsgierig, "nieuwsgierigData", setNieuwsgierigData);
-          }
-          if (loc.chill !== undefined) {
-            await appendData(chillData, loc.chill, "chillData", setChillData);
-          }
-          if (loc.probleem !== undefined) {
-            await appendData(probleemData, loc.probleem, "probleemData", setProbleemData);
-          }
+          // status als 1,2,3 mappen
+          const statusCode = loc.nieuwsgierig
+            ? 1
+            : loc.chill
+            ? 2
+            : loc.probleem
+            ? 3
+            : 0;
+          await appendData(statusData, statusCode, "statusData", setStatusData);
         }
       } catch (e) {
         console.error("Fout bij ophalen:", e);
@@ -131,9 +126,7 @@ export default function ActivityScreen() {
     move: groupByDay(activityData),
     jump: groupByDay(jumpData),
     sleep: computeSleep(activityData),
-    nieuwsgierig: groupByDay(nieuwsgierigData),
-    chill: groupByDay(chillData),
-    probleem: groupByDay(probleemData),
+    status: groupByDay(statusData),
   };
 
   const chartData = {
@@ -145,13 +138,18 @@ export default function ActivityScreen() {
   const isSleep = active === "sleep";
   const totalHours = (total / 60).toFixed(1);
 
+  const statusLabels: Record<number, string> = {
+    0: "Geen status",
+    1: "Nieuwsgierig",
+    2: "Chill",
+    3: "Probleem",
+  };
+
   const labels: Record<string, string> = {
     move: "Activiteit",
     jump: "Aantal sprongen",
     sleep: "Slaapuren",
-    nieuwsgierig: "Nieuwsgierig gedrag",
-    chill: "Chill-modus",
-    probleem: "Probleemsituaties",
+    status: "Gedrag status",
   };
 
   return (
@@ -161,7 +159,12 @@ export default function ActivityScreen() {
       </View>
 
       <Text style={styles.info}>
-        {labels[active]}: {isSleep ? `${totalHours} u` : total}
+        {labels[active]}:{" "}
+        {isSleep
+          ? `${totalHours} u`
+          : active === "status"
+          ? statusLabels[statusData[statusData.length - 1]?.value || 0]
+          : total}
       </Text>
 
       <LineChart

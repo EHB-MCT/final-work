@@ -2,7 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from "react-native";
 import { colors } from "@/constants/Colors";
 
-type ActivityType = "sleep" | "move" | "jump" | "nieuwsgierig" | "chill" | "probleem";
+type ActivityType = "sleep" | "move" | "jump" | "status";
 
 type Props = {
   active: ActivityType;
@@ -14,9 +14,7 @@ export default function ActivityButtons({ active, onPress }: Props) {
     { key: "sleep", label: "slaap" },
     { key: "move", label: "beweging" },
     { key: "jump", label: "sprongen" },
-    { key: "nieuwsgierig", label: "nieuwsgierig" },
-    { key: "chill", label: "chill" },
-    { key: "probleem", label: "probleem" },
+    { key: "status", label: "status" }, 
   ];
 
   return (
