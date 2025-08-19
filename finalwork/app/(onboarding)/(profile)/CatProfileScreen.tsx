@@ -13,7 +13,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SkipConfirmationModal from "@/components/SkipConfirmationModal";
-import ArrowBackIcon from "../../../assets/icons/arrow_back.svg"; // Adjust the path as necessary
+import ArrowBackIcon from "../../../assets/icons/arrow_back.svg";
+import CrossIcon from "../../../assets/icons/cross.svg";
 
 export default function CatProfileScreen() {
   const [name, setName] = useState("");
@@ -22,8 +23,8 @@ export default function CatProfileScreen() {
   const [weight, setWeight] = useState("");
   const [gender, setGender] = useState("M");
   const [showModal, setShowModal] = useState(false);
-
   const [currentStep, setCurrentStep] = useState(0);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const questions = [
     {
@@ -31,13 +32,26 @@ export default function CatProfileScreen() {
       render: () => (
         <>
           <Text style={styles.label}>Hoe heet je kat?</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Bijv. Pixel"
-            placeholderTextColor="#999"
-            value={name}
-            onChangeText={setName}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.input,
+                focusedInput === "name" && styles.inputFocused,
+              ]}
+              value={name}
+              onChangeText={setName}
+              onFocus={() => setFocusedInput("name")}
+              onBlur={() => setFocusedInput(null)}
+            />
+            {focusedInput && name.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setName("")}
+                style={styles.clearButton}
+              >
+                <CrossIcon width={32} height={32} fill="#999" />
+              </TouchableOpacity>
+            )}
+          </View>
         </>
       ),
     },
@@ -46,15 +60,18 @@ export default function CatProfileScreen() {
       render: () => (
         <>
           <Text style={styles.label}>Wanneer is je kat jarig?</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={{ color: birthday ? "#fff" : "#999" }}>
-              {birthday ? birthday.toLocaleDateString() : "Selecteer een datum"}
-            </Text>
-          </TouchableOpacity>
-          {showDatePicker && (
+          <View style={styles.inputWrapper}>
+            {/* <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={{ color: birthday ? "#fff" : "#999" }}>
+                {birthday
+                  ? birthday.toLocaleDateString()
+                  : "Selecteer een datum"}
+              </Text>
+            </TouchableOpacity> */}
+            {/* {showDatePicker && ( */}
             <DateTimePicker
               value={birthday || new Date()}
               mode="date"
@@ -64,7 +81,7 @@ export default function CatProfileScreen() {
                 if (selectedDate) setBirthday(selectedDate);
               }}
             />
-          )}
+          </View>
         </>
       ),
     },
@@ -73,14 +90,27 @@ export default function CatProfileScreen() {
       render: () => (
         <>
           <Text style={styles.label}>Hoeveel weegt je kat? (in kg)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Bijv. 4.2"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-            value={weight}
-            onChangeText={setWeight}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.input,
+                focusedInput === "weight" && styles.inputFocused,
+              ]}
+              keyboardType="numeric"
+              value={weight}
+              onChangeText={setWeight}
+              onFocus={() => setFocusedInput("weight")}
+              onBlur={() => setFocusedInput(null)}
+            />
+            {focusedInput && weight.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setWeight("")}
+                style={styles.clearButton}
+              >
+                <CrossIcon width={32} height={32} fill="#999" />
+              </TouchableOpacity>
+            )}
+          </View>
         </>
       ),
     },
@@ -138,6 +168,19 @@ export default function CatProfileScreen() {
   return (
     <View style={styles.container}>
       <Text style={[styles.title, styles.center, styles.topText]}>Welkom</Text>
+      <View style={styles.stepContainer}>
+        {questions.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.step,
+              {
+                backgroundColor: index <= currentStep ? "#FD9003" : "#555", // filled if step is current or before
+              },
+            ]}
+          />
+        ))}
+      </View>
       <Text style={styles.subTitle}>We willen je kat graag leren kennen.</Text>
 
       <View style={styles.question}>{questions[currentStep].render()}</View>
@@ -203,12 +246,14 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   input: {
+    flex: 1,
     borderWidth: 1,
-    borderColor: "#666",
+    borderColor: "#fff",
     padding: 10,
     borderRadius: 6,
     color: "#fff",
   },
+
   radioContainer: {
     flexDirection: "row",
     gap: 20,
@@ -250,5 +295,32 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+
+  inputFocused: {
+    borderColor: "#FD9003",
+    borderWidth: 2,
+  },
+  stepContainer: {
+    flexDirection: "row",
+    gap: 8,
+    marginVertical: 20,
+  },
+  step: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "#555", // default gray
+  },
+
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+  },
+
+  clearButton: {
+    position: "absolute",
+    right: 1,
+    padding: 4,
   },
 });

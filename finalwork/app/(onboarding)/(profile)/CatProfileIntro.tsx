@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "transparent", // make sure the screen is transparent
+    backgroundColor: "transparent",
   },
   text: {
     fontSize: 28,
