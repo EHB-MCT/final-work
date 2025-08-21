@@ -8,30 +8,33 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import MapView, {
-  Marker,
-  Polygon,
-  MapPressEvent,
-  LatLng,
-} from "react-native-maps";
-import { isPointInPolygon } from "geolib";
+import MapView, { Marker, Polygon, MapPressEvent, LatLng } from "react-native-maps";
+import { isPointInPolygon, getDistance } from "geolib";
 import mapStyle from "@/assets/mapStyle.json";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-
 import { colors } from "@/constants/Colors";
-
 import { fetchLatestCatLocation } from "../services/apiCalls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// import "../../notificationManager";
-//
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import { GEOFENCE_TASK } from "../../notificationManager";
 
+type FavoriteLocation = {
+  id: string;
+  coordinate: LatLng;
+  title: string;
+};
+
+type CatLocationHistory = {
+  coordinate: LatLng;
+  totalTime: number; // seconds
+  lastSeen: number; // timestamp
+};
+
 export default function EditableGeofenceMap() {
-  const [history, setHistory] = useState<(LatLng & { timestamp: Date })[]>([]);
+  const [history, setHistory] = useState<CatLocationHistory[]>([]);
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [catImageUri, setCatImageUri] = useState<string | null>(null);
@@ -41,34 +44,32 @@ export default function EditableGeofenceMap() {
     longitude: 4.355563,
   });
   const [isInside, setIsInside] = useState(true);
+  const [favorites, setFavorites] = useState<FavoriteLocation[]>([]);
 
+  // 🐱 Profiel data ophalen
   useEffect(() => {
-    AsyncStorage.getItem("profileImage")
-      .then((uri) => uri && setCatImageUri(uri))
-      .catch(console.error);
+    AsyncStorage.getItem("profileImage").then((uri) => uri && setCatImageUri(uri));
+    AsyncStorage.getItem("catName").then((name) => name && setCatName(name));
+    AsyncStorage.getItem("history").then((data) => {
+      if (data) setHistory(JSON.parse(data));
+    });
+    AsyncStorage.getItem("favorites").then((data) => {
+      if (data) setFavorites(JSON.parse(data));
+    });
   }, []);
 
-  useEffect(() => {
-    AsyncStorage.getItem("catName")
-      .then((name) => name && setCatName(name))
-      .catch(console.error);
-  }, []);
-
+  // 📍 Cat locatie ophalen
   const fetchCatLocation = async () => {
     const latest = await fetchLatestCatLocation();
     if (latest) {
-      // console.log("Cat location fetched:", catLocation);
-      setCatLocation({
-        latitude: latest.latitude,
-        longitude: latest.longitude,
-      });
+      const newLocation = { latitude: latest.latitude, longitude: latest.longitude };
+      setCatLocation(newLocation);
+      await updateFavoriteAutomatically(newLocation);
     }
   };
 
   useEffect(() => {
     fetchCatLocation();
-
-    // Optioneel: periodiek ophalen
     const interval = setInterval(fetchCatLocation, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -83,6 +84,46 @@ export default function EditableGeofenceMap() {
   const clearPolygon = () => setPolygonCoords([]);
   const toggleEdit = () => setIsEditing((prev) => !prev);
 
+  // 🐱 Favoriete locatie automatisch berekenen
+  const updateFavoriteAutomatically = async (newCoord: LatLng) => {
+    const HISTORY_RADIUS = 10; // meters
+    const now = Date.now();
+    let updatedHistory = [...history];
+    let found = false;
+
+    for (let entry of updatedHistory) {
+      const distance = getDistance(entry.coordinate, newCoord);
+      if (distance <= HISTORY_RADIUS) {
+        entry.totalTime += (now - entry.lastSeen) / 1000; // seconden
+        entry.lastSeen = now;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      updatedHistory.push({ coordinate: newCoord, totalTime: 0, lastSeen: now });
+    }
+
+    setHistory(updatedHistory);
+    await AsyncStorage.setItem("history", JSON.stringify(updatedHistory));
+
+    // Bepaal favoriete locatie
+    const favoriteEntry = updatedHistory.reduce((prev, curr) =>
+      curr.totalTime > prev.totalTime ? curr : prev
+    );
+
+    const favorite: FavoriteLocation = {
+      id: "auto-fav",
+      coordinate: favoriteEntry.coordinate,
+      title: "Favoriete plek",
+    };
+
+    setFavorites([favorite]);
+    await AsyncStorage.setItem("favorites", JSON.stringify([favorite]));
+  };
+
+  // Check of kat in polygon zit
   useEffect(() => {
     if (polygonCoords.length >= 3) {
       const result = isPointInPolygon(catLocation, polygonCoords);
@@ -138,13 +179,14 @@ export default function EditableGeofenceMap() {
 
         {polygonCoords.map((coord, index) => (
           <Marker
-            key={index}
+            key={`poly-${index}`}
             coordinate={coord}
             pinColor="blue"
             title={`Punt ${index + 1}`}
           />
         ))}
 
+        {/* 🐱 Kat marker */}
         <Marker coordinate={catLocation}>
           {catImageUri ? (
             <Image
@@ -162,16 +204,22 @@ export default function EditableGeofenceMap() {
             />
           )}
         </Marker>
+
+        {/* ⭐ Favoriete locatie */}
+        {favorites.map((fav) => (
+          <Marker
+            key={fav.id}
+            coordinate={fav.coordinate}
+            pinColor="gold"
+            title={fav.title}
+          />
+        ))}
       </MapView>
 
-      {/* Icon Buttons rechts */}
+      {/* Knoppen rechts */}
       <View style={styles.iconButtons}>
         <TouchableOpacity style={styles.iconButton} onPress={toggleEdit}>
-          <Ionicons
-            name={isEditing ? "checkmark" : "pencil"}
-            size={24}
-            color="white"
-          />
+          <Ionicons name={isEditing ? "checkmark" : "pencil"} size={24} color="white" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.iconButton} onPress={clearPolygon}>
@@ -197,8 +245,8 @@ export default function EditableGeofenceMap() {
           {polygonCoords.length < 3
             ? "Minstens 3 punten nodig voor een zone"
             : isInside
-            ? `${catName ? catName : "Kat"} is BINNEN de zone!`
-            : `${catName ? catName : "Kat"} is BUITEN de zone!`}
+            ? `${catName || "Kat"} is BINNEN de zone!`
+            : `${catName || "Kat"} is BUITEN de zone!`}
         </Text>
       </View>
     </View>
@@ -223,7 +271,6 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     backgroundColor: colors.primary,
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,

@@ -1,5 +1,9 @@
 // services/catService.ts
 export interface CatLocation {
+  probleem: any;
+  chill: any;
+  status: any;
+  nieuwsgierig: undefined;
   latitude: number;
   longitude: number;
   timestamp?: string;
@@ -22,6 +26,11 @@ export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
         timestamp: latest.timestamp,
         jump: latest.jump,
         activityLevel: latest.activityLevel,
+
+        probleem: latest.probleem ?? false,
+        chill: latest.chill ?? false,
+        status: latest.status ?? "unknown",
+        nieuwsgierig: latest.nieuwsgierig ?? false,
       };
     }
 
