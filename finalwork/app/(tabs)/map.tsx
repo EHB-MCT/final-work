@@ -9,7 +9,7 @@ import {
   Image,
 } from "react-native";
 import MapView, { Marker, Polygon, MapPressEvent, LatLng } from "react-native-maps";
-import { isPointInPolygon, getDistance } from "geolib";
+import { isPointInPolygon } from "geolib";
 import mapStyle from "@/assets/mapStyle.json";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -27,14 +27,8 @@ type FavoriteLocation = {
   title: string;
 };
 
-type CatLocationHistory = {
-  coordinate: LatLng;
-  totalTime: number; // seconds
-  lastSeen: number; // timestamp
-};
-
 export default function EditableGeofenceMap() {
-  const [history, setHistory] = useState<CatLocationHistory[]>([]);
+  const [history, setHistory] = useState<(LatLng & { timestamp: Date })[]>([]);
   const [polygonCoords, setPolygonCoords] = useState<LatLng[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [catImageUri, setCatImageUri] = useState<string | null>(null);
@@ -44,27 +38,30 @@ export default function EditableGeofenceMap() {
     longitude: 4.355563,
   });
   const [isInside, setIsInside] = useState(true);
+
   const [favorites, setFavorites] = useState<FavoriteLocation[]>([]);
 
-  // 🐱 Profiel data ophalen
+  // Profiel data ophalen
   useEffect(() => {
     AsyncStorage.getItem("profileImage").then((uri) => uri && setCatImageUri(uri));
     AsyncStorage.getItem("catName").then((name) => name && setCatName(name));
-    AsyncStorage.getItem("history").then((data) => {
-      if (data) setHistory(JSON.parse(data));
-    });
+  }, []);
+
+  // Favorieten laden
+  useEffect(() => {
     AsyncStorage.getItem("favorites").then((data) => {
       if (data) setFavorites(JSON.parse(data));
     });
   }, []);
 
-  // 📍 Cat locatie ophalen
+  // Locatie van kat ophalen
   const fetchCatLocation = async () => {
     const latest = await fetchLatestCatLocation();
     if (latest) {
-      const newLocation = { latitude: latest.latitude, longitude: latest.longitude };
-      setCatLocation(newLocation);
-      await updateFavoriteAutomatically(newLocation);
+      setCatLocation({
+        latitude: latest.latitude,
+        longitude: latest.longitude,
+      });
     }
   };
 
@@ -84,43 +81,24 @@ export default function EditableGeofenceMap() {
   const clearPolygon = () => setPolygonCoords([]);
   const toggleEdit = () => setIsEditing((prev) => !prev);
 
-  // 🐱 Favoriete locatie automatisch berekenen
-  const updateFavoriteAutomatically = async (newCoord: LatLng) => {
-    const HISTORY_RADIUS = 10; // meters
-    const now = Date.now();
-    let updatedHistory = [...history];
-    let found = false;
-
-    for (let entry of updatedHistory) {
-      const distance = getDistance(entry.coordinate, newCoord);
-      if (distance <= HISTORY_RADIUS) {
-        entry.totalTime += (now - entry.lastSeen) / 1000; // seconden
-        entry.lastSeen = now;
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      updatedHistory.push({ coordinate: newCoord, totalTime: 0, lastSeen: now });
-    }
-
-    setHistory(updatedHistory);
-    await AsyncStorage.setItem("history", JSON.stringify(updatedHistory));
-
-    // Bepaal favoriete locatie
-    const favoriteEntry = updatedHistory.reduce((prev, curr) =>
-      curr.totalTime > prev.totalTime ? curr : prev
-    );
-
-    const favorite: FavoriteLocation = {
-      id: "auto-fav",
-      coordinate: favoriteEntry.coordinate,
-      title: "Favoriete plek",
+  // Favoriet toevoegen
+  const addFavorite = async () => {
+    const newFav: FavoriteLocation = {
+      id: Date.now().toString(),
+      coordinate: catLocation,
+      title: `${catName || "Kat"}'s favoriete plek`,
     };
 
-    setFavorites([favorite]);
-    await AsyncStorage.setItem("favorites", JSON.stringify([favorite]));
+    const updated = [...favorites, newFav];
+    setFavorites(updated);
+    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+  };
+
+  // Favoriet verwijderen
+  const removeFavorite = async (id: string) => {
+    const updated = favorites.filter((fav) => fav.id !== id);
+    setFavorites(updated);
+    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
   };
 
   // Check of kat in polygon zit
@@ -186,7 +164,7 @@ export default function EditableGeofenceMap() {
           />
         ))}
 
-        {/* 🐱 Kat marker */}
+        {/* maraker kat */}
         <Marker coordinate={catLocation}>
           {catImageUri ? (
             <Image
@@ -205,13 +183,15 @@ export default function EditableGeofenceMap() {
           )}
         </Marker>
 
-        {/* ⭐ Favoriete locatie */}
+        {/* Favorieten markers */}
         {favorites.map((fav) => (
           <Marker
             key={fav.id}
             coordinate={fav.coordinate}
             pinColor="gold"
             title={fav.title}
+            description="Favoriete plek van je kat"
+            onCalloutPress={() => removeFavorite(fav.id)} // Klik op marker popup om te verwijderen
           />
         ))}
       </MapView>
@@ -237,6 +217,23 @@ export default function EditableGeofenceMap() {
         >
           <MaterialCommunityIcons name="history" size={24} color="white" />
         </TouchableOpacity>
+
+        {/*  Favoriet toevoegen */}
+        <TouchableOpacity style={styles.iconButton} onPress={addFavorite}>
+          <Ionicons name="star" size={24} color="white" />
+        </TouchableOpacity>
+
+        {/*  Laatste favoriet verwijderen */}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => {
+            if (favorites.length > 0) {
+              removeFavorite(favorites[favorites.length - 1].id);
+            }
+          }}
+        >
+          <Ionicons name="star-outline" size={24} color="white" />
+        </TouchableOpacity>
       </View>
 
       {/* Status onderaan */}
@@ -245,8 +242,8 @@ export default function EditableGeofenceMap() {
           {polygonCoords.length < 3
             ? "Minstens 3 punten nodig voor een zone"
             : isInside
-            ? `${catName || "Kat"} is BINNEN de zone!`
-            : `${catName || "Kat"} is BUITEN de zone!`}
+            ? `${catName ? catName : "Kat"} is BINNEN de zone!`
+            : `${catName ? catName : "Kat"} is BUITEN de zone!`}
         </Text>
       </View>
     </View>
