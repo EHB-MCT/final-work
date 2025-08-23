@@ -5,7 +5,7 @@ const CatLocation = require("../models/CatLocation");
 // ✅ GET alle cat locations
 router.get("/", async (req, res) => {
   try {
-    const catLocations = await CatLocation.find().sort({ timestamp: -1 }); // Optioneel: nieuwste eerst
+    const catLocations = await CatLocation.find().sort({ timestamp: -1 }); // nieuwste eerst
     console.log("Gevonden cat locations:", catLocations);
     res.json(catLocations);
   } catch (error) {
@@ -14,9 +14,23 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ✅ GET laatste cat location (handig voor app)
+router.get("/latest", async (req, res) => {
+  try {
+    const latest = await CatLocation.findOne().sort({ timestamp: -1 });
+    if (!latest) {
+      return res.status(404).json({ message: "Geen cat locations gevonden" });
+    }
+    res.json(latest);
+  } catch (error) {
+    console.error("❌ Fout bij ophalen laatste locatie:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ✅ POST nieuwe cat location toevoegen
 router.post("/", async (req, res) => {
-  const { latitude, longitude, jump, activityLevel,timestamp } = req.body;
+  const { latitude, longitude, jump, activityLevel, timestamp } = req.body;
 
   const catLocation = new CatLocation({
     latitude,
@@ -36,7 +50,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// DELETE alle cat locations
+// ✅ DELETE alle cat locations
 router.delete("/", async (req, res) => {
   try {
     const result = await CatLocation.deleteMany({});
@@ -48,4 +62,5 @@ router.delete("/", async (req, res) => {
     res.status(500).json({ message: "Fout bij verwijderen van cat locations" });
   }
 });
+
 module.exports = router;
