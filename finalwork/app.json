@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "finalwork",
+    "displayName": "FinalWork",
     "slug": "finalwork",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,9 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "permissions": [
-        "android.permission.CAMERA"
-      ],
+      "permissions": ["android.permission.CAMERA"],
       "package": "com.miko0405.finalwork"
     },
     "web": {
@@ -42,8 +41,9 @@
           "backgroundColor": "#ffffff"
         }
       ],
+      "expo-secure-store",
       "expo-barcode-scanner",
-      "expo-secure-store"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

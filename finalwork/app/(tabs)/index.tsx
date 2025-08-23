@@ -14,6 +14,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import mapStyle from "@/assets/mapStyle.json";
 import { fetchLatestCatLocation } from "../services/apiCalls";
 import { colors } from "@/constants/Colors";
+import CircularProgress from "@/components/CircularProgress";
+import { BlurView } from "expo-blur";
+import SoundIcon from "../../assets/icons/sound.svg";
+import BatteryIcon from "../../assets/icons/battery.svg";
 
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 
@@ -103,91 +107,113 @@ export default function HomeScreen() {
         <View
           style={[
             StyleSheet.absoluteFill,
-            { backgroundColor: "rgba(0,0,0,0.42)" },
+            { backgroundColor: "rgba(0, 0, 0, 0)" },
           ]}
         />
       </ImageBackground>
-      <MapView
-        provider={Platform.OS === "android" ? undefined : "google"}
-        customMapStyle={mapStyle}
-        style={styles.map}
-        initialRegion={{
-          // 50.841671, "longitude": 4.323001
-          latitude: catLocation.latitude,
-          longitude: catLocation.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-      >
-        <Marker coordinate={catLocation}>
-          {catImageUri ? (
-            <Image
-              source={{ uri: catImageUri }}
-              style={{ width: 50, height: 50, borderRadius: 25 }}
-            />
-          ) : (
-            <View
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 25,
-                backgroundColor: "#ccc",
-              }}
-            />
-          )}
-        </Marker>
-      </MapView>
+      <View style={styles.mapWrapper}>
+        <MapView
+          provider={Platform.OS === "android" ? undefined : "google"}
+          customMapStyle={mapStyle}
+          style={styles.map}
+          initialRegion={{
+            latitude: catLocation.latitude,
+            longitude: catLocation.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+        >
+          <Marker coordinate={catLocation}>
+            {catImageUri ? (
+              <Image
+                source={{ uri: catImageUri }}
+                style={{ width: 50, height: 50, borderRadius: 25 }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 25,
+                  backgroundColor: "#ccc",
+                }}
+              />
+            )}
+          </Marker>
+        </MapView>
 
-      {/* <View style={styles.dataContainer}> */}
-      {/* <View style={styles.chartContainer}>
-          <LineChart
-            data={chartData}
-            width={Dimensions.get("window").width - 32}
-            height={220}
-            chartConfig={{
-              backgroundGradientFrom: "#19162B",
-              backgroundGradientTo: "#19162B",
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+        {/* Overlay text inside the map wrapper */}
+        <Text style={styles.overlayText}>Indoors</Text>
+      </View>
+      <View style={styles.dataContainer}>
+        <ImageBackground
+          source={require("../../assets/images/dataBG.png")}
+          style={styles.dataBox}
+          imageStyle={{ borderRadius: 12 }} // optional rounded corners
+        >
+          <Text style={styles.dataText}>Activiteit</Text>
+        </ImageBackground>
+        <ImageBackground
+          source={require("../../assets/images/dataBG.png")}
+          style={styles.dataBox}
+          imageStyle={{ borderRadius: 12 }} // optional rounded corners
+        >
+          <Text style={styles.dataText}>Slaap</Text>
+        </ImageBackground>
+      </View>
+
+      {/* circle */}
+      {/* <View style={styles.circleContainer}> */}
+      <View style={styles.circleContainer}>
+        {/* First circle */}
+        <View
+          style={{
+            width: 150,
+            height: 150,
+            borderRadius: 100,
+            backgroundColor: "rgba(121, 121, 121, 0.39)",
+            borderWidth: 9,
+            borderColor: "#D9D9D9",
+            overflow: "hidden",
+            justifyContent: "center",
+            alignItems: "center",
+            marginRight: 16,
+          }}
+        >
+          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+          <Text
+            style={{
+              color: "white",
+              textAlign: "center",
+              fontWeight: "bold",
+              // bottom: 10,
+              justifyContent: "center",
+              alignItems: "center",
             }}
-            bezier
-            style={{ borderRadius: 10 }}
-          />
-        </View> */}
-
-      {/* <View style={styles.bottomContainer}>
-          <View style={styles.activityContainer}>
-            <Text style={styles.activitySlot}>Activity 1</Text>
-            <Text style={styles.activitySlot}>Activity 2</Text>
-            <Text style={styles.activitySlot}>Activity 3</Text>
-            <Text style={styles.activitySlot}>Activity 4</Text>
-          </View>
-
-          <View style={styles.activityContainer}>
-            <LineChart
-              data={{
-                labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-                datasets: [
-                  {
-                    data: [20, 45, 28, 80, 99],
-                  },
-                ],
-              }}
-              width={150}
-              height={100}
-              chartConfig={{
-                backgroundColor: "#19162B",
-                backgroundGradientFrom: "#19162B",
-                backgroundGradientTo: "#19162B",
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              }}
-              bezier
-              style={{ borderRadius: 10, marginTop: 20 }}
-            />
-          </View>
-        </View> 
-      </View> */}
+          >
+            Speel geluid af
+            <SoundIcon />
+          </Text>
+        </View>
+        {/* Second circle */}
+        <View
+          style={{
+            width: 150,
+            height: 150,
+            borderRadius: 100,
+            backgroundColor: "rgba(121, 121, 121, 0.39)",
+            borderWidth: 9,
+            borderColor: "#D9D9D9",
+            overflow: "hidden",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
+          <CircularProgress progress={75} size={135} strokeWidth={10} />
+        </View>
+      </View>
+      {/* </View> */}
     </View>
   );
 }
@@ -196,24 +222,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  map: {
-    top: 10,
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height / 2.5,
-  },
+
   chartContainer: {
     flex: 1,
     padding: 16,
   },
-  dataContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
-    borderRadius: 10,
-    height: Dimensions.get("window").height,
-  },
+  // dataContainer: {
+  //   flex: 1,
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  //   backgroundColor: colors.background,
+  //   borderRadius: 10,
+  //   height: Dimensions.get("window").height,
+  // },
   bottomContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -246,5 +270,57 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
+  },
+  dataContainer: {
+    position: "absolute",
+    bottom: 200,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    paddingHorizontal: 20,
+  },
+  dataBox: {
+    width: 150,
+    height: 100,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dataText: {
+    color: "#02433B",
+    fontSize: 19,
+    fontWeight: "bold",
+  },
+
+  circleContainer: {
+    // position: "absolute",
+    // bottom: 200,
+    top: 125,
+    // left: 0,
+    // right: 0,
+    alignItems: "center",
+    // row
+    flexDirection: "row",
+    // backgroundColor: "rgba(223, 43, 43, 1)",
+  },
+
+  map: {
+    top: 50,
+    width: Dimensions.get("window").width - 32,
+    height: Dimensions.get("window").height / 2.5,
+    borderRadius: 10,
+  },
+
+  overlayText: {
+    position: "absolute",
+    top: 50,
+    left: 0,
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
   },
 });
