@@ -41,7 +41,6 @@
         }
       ],
       "expo-secure-store",
-      "expo-barcode-scanner",
       "expo-web-browser"
     ],
     "experiments": {

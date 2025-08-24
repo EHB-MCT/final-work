@@ -22,7 +22,6 @@
     "date-fns": "^4.1.0",
     "enhanced-fluid-bottom-navigation-bar": "^0.2.4",
     "expo": "53.0.22",
-    "expo-barcode-scanner": "~12.8.0",
     "expo-blur": "~14.1.4",
     "expo-camera": "~16.1.11",
     "expo-constants": "~17.1.7",
