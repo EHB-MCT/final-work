@@ -14,7 +14,7 @@ export interface CatLocation {
 export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
   try {
     const response = await fetch(
-      "https://final-work-7cqh.onrender.com/api/cat-locations"
+      "http://localhost:4000/api/cats"
     );
     const data = await response.json();
 
@@ -40,3 +40,23 @@ export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
     return null;
   }
 };
+
+export const registerPushToken = async (token: string) => {
+  try {
+    const response = await fetch("https://final-work-7cqh.onrender.com/api/tokens", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Fout bij registreren token:", error);
+    return null;
+  }
+};
+
+
+

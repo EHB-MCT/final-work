@@ -1,238 +1,116 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Dimensions, Text } from "react-native";
-import { LineChart } from "react-native-chart-kit";
+import { StyleSheet, View, Text, Dimensions } from "react-native";
 import { colors } from "@/constants/Colors";
 import ActivityButtons from "@/components/ActivityButtons";
 import { fetchLatestCatLocation } from "../services/apiCalls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-type DataPoint = { timestamp: string; value: number };
-const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
+type ActivityType = "sleep" | "move" | "jump" | "status";
 
-// Hulpfunctie: groepeer per dag
-function groupByDay(data: DataPoint[]) {
-  const grouped: Record<string, number> = {};
-  data.forEach(({ timestamp, value }) => {
-    const raw = new Date(timestamp).toLocaleDateString("nl-BE", {
-      weekday: "short",
-    });
-    const day = raw[0].toUpperCase() + raw.slice(1);
-    grouped[day] = (grouped[day] || 0) + value;
-  });
-  return WEEKDAYS.map((d) => grouped[d] || 0);
-}
-
-// Hulpfunctie: slaap = inactiviteit ≥ 30 minuten
-function computeSleep(activity: DataPoint[], thresholdMin = 30) {
-  const sleepMap: Record<string, number> = {};
-  const sorted = [...activity].sort(
-    (a, b) => +new Date(a.timestamp) - +new Date(b.timestamp)
-  );
-  let last: Date | null = null;
-  let lastDay = "";
-
-  for (const { timestamp } of sorted) {
-    const curr = new Date(timestamp);
-    const raw = curr.toLocaleDateString("nl-BE", { weekday: "short" });
-    const currDay = raw[0].toUpperCase() + raw.slice(1);
-
-    if (last && currDay === lastDay) {
-      const diffMin = (curr.getTime() - last.getTime()) / 60000;
-      if (diffMin >= thresholdMin) {
-        sleepMap[currDay] = (sleepMap[currDay] || 0) + diffMin;
-      }
-    }
-    last = curr;
-    lastDay = currDay;
-  }
-  return WEEKDAYS.map((d) => Math.round(sleepMap[d] || 0));
-}
-
-// Weeknummer berekenen
-function getWeekNumber(date: Date) {
-  const start = new Date(date.getFullYear(), 0, 1);
-  const diff = (date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-  return Math.floor((diff + start.getDay()) / 7);
-}
-
-// Data per week + dag groeperen
-function groupByWeek(data: DataPoint[]) {
-  const grouped: Record<number, Record<string, number>> = {};
-
-  data.forEach(({ timestamp, value }) => {
-    const d = new Date(timestamp);
-    const week = getWeekNumber(d);
-    const raw = d.toLocaleDateString("nl-BE", { weekday: "short" });
-    const day = raw[0].toUpperCase() + raw.slice(1);
-
-    if (!grouped[week]) grouped[week] = {};
-    grouped[week][day] = (grouped[week][day] || 0) + value;
-  });
-
-  return grouped;
-}
-
-// Huidige week vs vorige week vergelijken
-function getWeekComparison(data: DataPoint[]) {
-  const grouped = groupByWeek(data);
-
-  const weeks = Object.keys(grouped).map(Number).sort((a, b) => b - a); // meest recente eerst
-  const thisWeek = weeks[0] ?? 0;
-  const lastWeek = weeks[1] ?? thisWeek - 1;
-
-  const thisWeekData = WEEKDAYS.map((d) => grouped[thisWeek]?.[d] || 0);
-  const lastWeekData = WEEKDAYS.map((d) => grouped[lastWeek]?.[d] || 0);
-
-  return { thisWeekData, lastWeekData };
+interface DataPoint {
+  timestamp: string;
+  value: number;
 }
 
 export default function ActivityScreen() {
-  const [active, setActive] = useState<"sleep" | "move" | "jump" | "status">(
-    "sleep"
-  );
+  const [active, setActive] = useState<ActivityType>("status");
 
   const [activityData, setActivityData] = useState<DataPoint[]>([]);
   const [jumpData, setJumpData] = useState<DataPoint[]>([]);
   const [statusData, setStatusData] = useState<DataPoint[]>([]);
 
+  // Laden van AsyncStorage bij start
   useEffect(() => {
     const loadData = async () => {
       try {
         const keys = ["activityData", "jumpData", "statusData"];
+        const results = await AsyncStorage.multiGet(keys);
 
-        const [act, jump, status] = await AsyncStorage.multiGet(keys);
+        const act = results[0][1];
+        const jump = results[1][1];
+        const status = results[2][1];
 
-        if (act[1]) setActivityData(JSON.parse(act[1]));
-        if (jump[1]) setJumpData(JSON.parse(jump[1]));
-        if (status[1]) setStatusData(JSON.parse(status[1]));
+        if (act) setActivityData(JSON.parse(act));
+        if (jump) setJumpData(JSON.parse(jump));
+        if (status) setStatusData(JSON.parse(status));
       } catch (e) {
-        console.error("Fout bij laden uit AsyncStorage", e);
+        console.error("Fout bij laden AsyncStorage", e);
       }
     };
-
     loadData();
+  }, []);
 
+  // Interval voor updates
+  useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const loc = await fetchLatestCatLocation();
-        if (loc?.timestamp) {
-          const ts = loc.timestamp as string;
+        if (!loc?.timestamp) return;
+        const ts = loc.timestamp;
 
-          const appendData = async (
-            existing: DataPoint[],
-            newVal: number,
-            key: string,
-            setFn: React.Dispatch<React.SetStateAction<DataPoint[]>>
-          ) => {
-            if (
-              existing.length === 0 ||
-              existing[existing.length - 1].timestamp !== ts
-            ) {
-              const updated = [...existing, { timestamp: ts, value: newVal }];
-              setFn(updated);
-              await AsyncStorage.setItem(key, JSON.stringify(updated));
-            }
-          };
+        const appendData = async (
+          existing: DataPoint[],
+          newVal: number,
+          key: string,
+          setFn: React.Dispatch<React.SetStateAction<DataPoint[]>>
+        ) => {
+          if (existing.length === 0 || existing[existing.length - 1].timestamp !== ts) {
+            const updated = [...existing, { timestamp: ts, value: newVal }];
+            setFn(updated);
+            await AsyncStorage.setItem(key, JSON.stringify(updated));
+          }
+        };
 
-          await appendData(
-            activityData,
-            loc.activityLevel ?? 0,
-            "activityData",
-            setActivityData
-          );
-          await appendData(jumpData, loc.jump ?? 0, "jumpData", setJumpData);
+        await appendData(activityData, loc.activityLevel ?? 0, "activityData", setActivityData);
+        await appendData(jumpData, loc.jump ?? 0, "jumpData", setJumpData);
 
-          // status als 1,2,3 mappen
-          const statusCode = loc.nieuwsgierig
-            ? 1
-            : loc.chill
-            ? 2
-            : loc.probleem
-            ? 3
-            : 0;
-          await appendData(statusData, statusCode, "statusData", setStatusData);
-        }
+        const statusCode =
+          loc.status === "nieuwsgierig" ? 1 :
+          loc.status === "chill" ? 2 :
+          loc.status === "probleem" ? 3 : 0;
+
+        await appendData(statusData, statusCode, "statusData", setStatusData);
       } catch (e) {
-        console.error("Fout bij ophalen:", e);
+        console.error("Fout bij ophalen locatie", e);
       }
-    }, 10000); // elke 10 seconden
+    }, 10000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [activityData, jumpData, statusData]);
 
-  const dataSet = {
-    move: groupByDay(activityData),
-    jump: groupByDay(jumpData),
-    sleep: computeSleep(activityData),
-    status: groupByDay(statusData),
+  // Functies om totaal/slaapuren te berekenen
+  const total = (data: DataPoint[]) => data.reduce((sum, d) => sum + d.value, 0);
+  const totalHours = (total(activityData) / 60).toFixed(1);
+
+  const statusMap: Record<number, { label: string; color: string }> = {
+    0: { label: "Geen status", color: "#999" },
+    1: { label: "Nieuwsgierig", color: "#FFD700" },
+    2: { label: "Chill", color: "#00FF00" },
+    3: { label: "Probleem", color: "#FF4500" },
   };
 
-  // Chart data (extra logica voor move)
-  let chartData;
-  if (active === "move") {
-    const { thisWeekData, lastWeekData } = getWeekComparison(activityData);
-    chartData = {
-      labels: WEEKDAYS,
-      datasets: [
-        { data: thisWeekData, color: () => "rgba(0, 255, 0, 1)", strokeWidth: 2 },
-        { data: lastWeekData, color: () => "rgba(255, 165, 0, 1)", strokeWidth: 2 },
-      ],
-      legend: ["Deze week", "Vorige week"],
-    };
-  } else {
-    chartData = {
-      labels: WEEKDAYS,
-      datasets: [{ data: dataSet[active] || [] }],
-    };
-  }
-
-  const total = (dataSet[active] || []).reduce((sum, n) => sum + n, 0);
-  const isSleep = active === "sleep";
-  const totalHours = (total / 60).toFixed(1);
-
-  const statusLabels: Record<number, string> = {
-    0: "Geen status",
-    1: "Nieuwsgierig",
-    2: "Chill",
-    3: "Probleem",
-  };
-
-  const labels: Record<string, string> = {
-    move: "Activiteit",
-    jump: "Aantal sprongen",
-    sleep: "Slaapuren",
-    status: "Gedrag status",
-  };
+  const statusLabel = statusMap[statusData[statusData.length - 1]?.value || 0]?.label || "Geen status";
 
   return (
     <View style={styles.container}>
-      <View style={styles.buttonsWrapper}>
-        <ActivityButtons active={active} onPress={setActive} />
+      <ActivityButtons active={active} onPress={setActive} />
+
+      <View style={styles.card}>
+        {active === "sleep" && (
+          <Text style={styles.cardText}>Slaap: {totalHours} uur</Text>
+        )}
+        {active === "move" && (
+          <Text style={styles.cardText}>Beweging: {total(activityData)}</Text>
+        )}
+        {active === "jump" && (
+          <Text style={styles.cardText}>Sprongen: {total(jumpData)}</Text>
+        )}
+        {active === "status" && (
+          <View style={[styles.statusCard, { backgroundColor: statusMap[statusData[statusData.length - 1]?.value || 0].color }]}>
+            <Text style={styles.statusText}>{statusLabel}</Text>
+          </View>
+        )}
       </View>
-
-      <Text style={styles.info}>
-        {labels[active]}:{" "}
-        {isSleep
-          ? `${totalHours} u`
-          : active === "status"
-          ? statusLabels[statusData[statusData.length - 1]?.value || 0]
-          : total}
-      </Text>
-
-      <LineChart
-        data={chartData}
-        width={Dimensions.get("window").width}
-        height={420}
-        chartConfig={{
-          backgroundGradientFrom: "#19162B",
-          backgroundGradientTo: "#19162B",
-          decimalPlaces: isSleep ? 1 : 0,
-          color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
-          labelColor: () => "#fff",
-        }}
-        bezier
-        style={styles.chart}
-      />
     </View>
   );
 }
@@ -242,16 +120,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     alignItems: "center",
-    justifyContent: "flex-start",
+    paddingTop: 100,
   },
-  chart: {},
-  info: {
-    fontSize: 16,
-    marginVertical: 12,
+  card: {
+    marginTop: 30,
+    width: Dimensions.get("window").width * 0.8,
+    paddingVertical: 50,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#333",
+  },
+  cardText: {
+    fontSize: 28,
+    fontWeight: "bold",
     color: "#fff",
   },
-  buttonsWrapper: {
-    marginTop: 200,
+  statusCard: {
     width: "100%",
+    paddingVertical: 60,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statusText: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#000",
   },
 });
