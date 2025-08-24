@@ -54,7 +54,7 @@ pnpm-debug.log*
 
 # Build outputs
 build/
-android/app/build/
+android/*
 ios/build/
 ios/Pods/
 
