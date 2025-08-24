@@ -59,6 +59,7 @@ build/
 android/*
 ios/build/
 ios/Pods/
+android/
 
 # CocoaPods
 ios/Pods/

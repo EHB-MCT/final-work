@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const catLocationRoutes = require("../routes/catLocations");
+const notificationsRouter = require("../routes/notifications");
+
+
 
 dotenv.config();
 
@@ -23,3 +26,4 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 app.use("/api/cat-locations", catLocationRoutes);
+app.use("/api/notifications", notificationsRouter);

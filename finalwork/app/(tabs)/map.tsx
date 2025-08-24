@@ -8,7 +8,12 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import MapView, { Marker, Polygon, MapPressEvent, LatLng } from "react-native-maps";
+import MapView, {
+  Marker,
+  Polygon,
+  MapPressEvent,
+  LatLng,
+} from "react-native-maps";
 import { isPointInPolygon } from "geolib";
 import mapStyle from "@/assets/mapStyle.json";
 import { router } from "expo-router";
@@ -20,6 +25,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import { GEOFENCE_TASK } from "../../notificationManager";
+import {
+  triggerGeofenceAlert,
+  requestNotificationPermissions,
+} from "../utils/notifications";
 
 type FavoriteLocation = {
   id: string;
@@ -43,8 +52,20 @@ export default function EditableGeofenceMap() {
 
   // Profiel data ophalen
   useEffect(() => {
-    AsyncStorage.getItem("profileImage").then((uri) => uri && setCatImageUri(uri));
+    AsyncStorage.getItem("profileImage").then(
+      (uri) => uri && setCatImageUri(uri)
+    );
     AsyncStorage.getItem("catName").then((name) => name && setCatName(name));
+  }, []);
+
+  useEffect(() => {
+    const checkNotificationPermission = async () => {
+      const hasPermission = await requestNotificationPermissions();
+      if (!hasPermission) {
+        console.warn("Notification permission not granted.");
+      }
+    };
+    checkNotificationPermission();
   }, []);
 
   // Favorieten laden
@@ -108,6 +129,14 @@ export default function EditableGeofenceMap() {
       setIsInside(result);
     }
   }, [catLocation, polygonCoords]);
+
+  useEffect(() => {
+    // geofence notification
+    if (!isInside) {
+      triggerGeofenceAlert();
+      console.log("Kat is buiten de zone!");
+    }
+  }, [isInside]);
 
   useEffect(() => {
     (async () => {
@@ -199,7 +228,11 @@ export default function EditableGeofenceMap() {
       {/* Knoppen rechts */}
       <View style={styles.iconButtons}>
         <TouchableOpacity style={styles.iconButton} onPress={toggleEdit}>
-          <Ionicons name={isEditing ? "checkmark" : "pencil"} size={24} color="white" />
+          <Ionicons
+            name={isEditing ? "checkmark" : "pencil"}
+            size={24}
+            color="white"
+          />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.iconButton} onPress={clearPolygon}>
