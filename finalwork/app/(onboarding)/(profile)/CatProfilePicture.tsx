@@ -61,9 +61,9 @@ export default function CatProfilePicture() {
         <TouchableOpacity style={styles.nextButton} onPress={finish}>
           <Text style={styles.buttonText}>Volgende</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={finish}>
+        {/* <TouchableOpacity onPress={finish}>
           <Text style={styles.skipText}>Overslaan</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );
@@ -72,7 +72,7 @@ export default function CatProfilePicture() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#19162B",
+    backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
@@ -97,11 +97,20 @@ const styles = StyleSheet.create({
   image: { width: "100%", height: "100%" },
   buttonContainer: { alignItems: "center", gap: 12 },
   nextButton: {
-    backgroundColor: "white",
+    backgroundColor: "#FD9003",
+    // dropshadow
+    shadowColor: "#FD9003",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 2,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 8,
   },
-  buttonText: { color: "#19162B", fontSize: 16, fontWeight: "bold" },
+  buttonText: { color: "#ffffffff", fontSize: 16, fontWeight: "bold" },
   skipText: { marginTop: 8, color: "white", textDecorationLine: "underline" },
 });

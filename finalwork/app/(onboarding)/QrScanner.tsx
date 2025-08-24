@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Text, View, Button } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { Text, View, Button, StyleSheet } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 
@@ -14,10 +14,20 @@ export default function QRScannerScreen() {
     }
   }, [permission, requestPermission]);
 
-  if (!permission || !permission.granted) {
+  if (!permission) {
     return (
-      <View>
-        <Text>Camera permissie is nodig om QR-codes te scannen.</Text>
+      <View style={styles.container}>
+        <Text style={styles.message}>Loading camera permissions...</Text>
+      </View>
+    );
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>
+          Camera permissie is nodig om QR-codes te scannen.
+        </Text>
         <Button title="Grant Permission" onPress={requestPermission} />
       </View>
     );
@@ -30,33 +40,46 @@ export default function QRScannerScreen() {
     setLastScannedAt(now);
     console.log("Scanned:", data);
     if (data === "123") {
-      router.push("/CatProfileScreen");
+      router.push("(onboarding)/CatProfileIntro");
     }
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <CameraView
-        style={{ flex: 1 }}
+        style={styles.camera}
         barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
         onBarcodeScanned={handleBarcodeScanned}
       />
 
       {/* Reticle */}
-      <View
-        style={{
-          position: "absolute",
-          top: "20%",
-          left: "10%",
-          width: "80%",
-          height: "40%",
-          borderWidth: 2,
-          borderColor: "#00FF00",
-          borderRadius: 10,
-          backgroundColor: "transparent",
-          borderStyle: "dashed",
-        }}
-      />
+      <View style={styles.reticle} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  message: {
+    textAlign: "center",
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  camera: {
+    flex: 1,
+  },
+  reticle: {
+    position: "absolute",
+    top: "20%",
+    left: "10%",
+    width: "80%",
+    height: "40%",
+    borderWidth: 2,
+    borderColor: "#00FF00",
+    borderRadius: 10,
+    backgroundColor: "transparent",
+    borderStyle: "dashed",
+  },
+});

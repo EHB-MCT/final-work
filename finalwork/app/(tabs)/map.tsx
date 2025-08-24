@@ -120,8 +120,8 @@ export default function EditableGeofenceMap() {
         provider={Platform.OS === "android" ? undefined : "google"}
         customMapStyle={mapStyle}
         initialRegion={{
-          latitude: catLocation.latitude,
-          longitude: catLocation.longitude,
+          latitude: 50.841627,
+          longitude: 4.322857,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}

@@ -12,12 +12,12 @@ import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { SecondaryButton } from "@/components/ui/SecondaryButton";
 import InputModal from "@/components/ui/InputModal";
 import { useRouter } from "expo-router";
-
+import { router } from "expo-router";
 import { colors } from "@/constants/Colors";
 
 type RootStackParamList = {
   "(onboarding)/QrScanner": undefined;
-  "(tabs)/CatProfileScreen": undefined;
+  "(tabs)/CatProfileIntro": undefined;
 };
 
 export default function PairDeviceScreen() {
@@ -34,7 +34,7 @@ export default function PairDeviceScreen() {
     setDeviceId(value);
 
     if (value === "123") {
-      router.push("/CatProfileScreen");
+      router.push("/CatProfileIntro");
     }
   };
   return (
@@ -43,9 +43,7 @@ export default function PairDeviceScreen() {
         <Text style={{ fontSize: 24, textAlign: "center", margin: 20 }}>
           Scan de QR code op uw Meowtracks apparaat
         </Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("(onboarding)/QrScanner")}
-        >
+        <TouchableOpacity onPress={() => router.push("(onboarding)/QrScanner")}>
           {/* <BackgroundShape
           width={Dimensions.get("window").width}
           style={styles.backgroundSvg}
