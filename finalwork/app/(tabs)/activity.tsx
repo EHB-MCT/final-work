@@ -9,7 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 type DataPoint = { timestamp: string; value: number };
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 
-// Groepeer per dag
+// Hulpfunctie: groepeer per dag
 function groupByDay(data: DataPoint[]) {
   const grouped: Record<string, number> = {};
   data.forEach(({ timestamp, value }) => {
@@ -22,7 +22,7 @@ function groupByDay(data: DataPoint[]) {
   return WEEKDAYS.map((d) => grouped[d] || 0);
 }
 
-// Slaap = inactiviteit ≥ 30 minuten
+// Hulpfunctie: slaap = inactiviteit ≥ 30 minuten
 function computeSleep(activity: DataPoint[], thresholdMin = 30) {
   const sleepMap: Record<string, number> = {};
   const sorted = [...activity].sort(
@@ -46,6 +46,44 @@ function computeSleep(activity: DataPoint[], thresholdMin = 30) {
     lastDay = currDay;
   }
   return WEEKDAYS.map((d) => Math.round(sleepMap[d] || 0));
+}
+
+// Weeknummer berekenen
+function getWeekNumber(date: Date) {
+  const start = new Date(date.getFullYear(), 0, 1);
+  const diff = (date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+  return Math.floor((diff + start.getDay()) / 7);
+}
+
+// Data per week + dag groeperen
+function groupByWeek(data: DataPoint[]) {
+  const grouped: Record<number, Record<string, number>> = {};
+
+  data.forEach(({ timestamp, value }) => {
+    const d = new Date(timestamp);
+    const week = getWeekNumber(d);
+    const raw = d.toLocaleDateString("nl-BE", { weekday: "short" });
+    const day = raw[0].toUpperCase() + raw.slice(1);
+
+    if (!grouped[week]) grouped[week] = {};
+    grouped[week][day] = (grouped[week][day] || 0) + value;
+  });
+
+  return grouped;
+}
+
+// Huidige week vs vorige week vergelijken
+function getWeekComparison(data: DataPoint[]) {
+  const grouped = groupByWeek(data);
+
+  const weeks = Object.keys(grouped).map(Number).sort((a, b) => b - a); // meest recente eerst
+  const thisWeek = weeks[0] ?? 0;
+  const lastWeek = weeks[1] ?? thisWeek - 1;
+
+  const thisWeekData = WEEKDAYS.map((d) => grouped[thisWeek]?.[d] || 0);
+  const lastWeekData = WEEKDAYS.map((d) => grouped[lastWeek]?.[d] || 0);
+
+  return { thisWeekData, lastWeekData };
 }
 
 export default function ActivityScreen() {
@@ -129,10 +167,24 @@ export default function ActivityScreen() {
     status: groupByDay(statusData),
   };
 
-  const chartData = {
-    labels: WEEKDAYS,
-    datasets: [{ data: dataSet[active] || [] }],
-  };
+  // Chart data (extra logica voor move)
+  let chartData;
+  if (active === "move") {
+    const { thisWeekData, lastWeekData } = getWeekComparison(activityData);
+    chartData = {
+      labels: WEEKDAYS,
+      datasets: [
+        { data: thisWeekData, color: () => "rgba(0, 255, 0, 1)", strokeWidth: 2 },
+        { data: lastWeekData, color: () => "rgba(255, 165, 0, 1)", strokeWidth: 2 },
+      ],
+      legend: ["Deze week", "Vorige week"],
+    };
+  } else {
+    chartData = {
+      labels: WEEKDAYS,
+      datasets: [{ data: dataSet[active] || [] }],
+    };
+  }
 
   const total = (dataSet[active] || []).reduce((sum, n) => sum + n, 0);
   const isSleep = active === "sleep";
@@ -176,6 +228,7 @@ export default function ActivityScreen() {
           backgroundGradientTo: "#19162B",
           decimalPlaces: isSleep ? 1 : 0,
           color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
+          labelColor: () => "#fff",
         }}
         bezier
         style={styles.chart}
