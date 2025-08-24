@@ -14,6 +14,7 @@ import MapView, { Polyline, Marker } from "react-native-maps";
 import { getDistance } from "geolib";
 import { format } from "date-fns";
 import { colors } from "@/constants/Colors";
+import { useNavigation } from "@react-navigation/native"; // <- toegevoegd
 
 import mapStyle from "@/assets/mapStyle.json";
 
@@ -24,6 +25,7 @@ interface LocationPoint {
 }
 
 export default function RouteHistoryScreen() {
+  const navigation = useNavigation(); // <- toegevoegd
   const [allData, setAllData] = useState<{ [date: string]: LocationPoint[] }>(
     {}
   );
@@ -207,6 +209,14 @@ export default function RouteHistoryScreen() {
           <Text>Niet genoeg data om route te tonen.</Text>
         </View>
       )}
+
+      {/* Terug-knop rechtsonder */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()} // <- past terug-navigatie toe
+      >
+        <Text style={styles.backButtonText}>Terug</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -302,5 +312,24 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: "#eee",
+  },
+  backButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  backButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
