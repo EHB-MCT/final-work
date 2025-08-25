@@ -78,8 +78,32 @@ export default function ActivityScreen() {
     return () => clearInterval(interval);
   }, [activityData, jumpData, statusData]);
 
-  const total = (data: DataPoint[]) => data.reduce((sum, d) => sum + d.value, 0);
-  const totalHours = (total(activityData) / 60).toFixed(1);
+  // --- Functie voor weekfilter ---
+  const getDataForWeek = (data: DataPoint[], weekOffset = 0): DataPoint[] => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1 + weekOffset * 7);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    return data.filter(d => {
+      const ts = new Date(d.timestamp);
+      return ts >= startOfWeek && ts < endOfWeek;
+    });
+  };
+
+  // --- Bereid data voor grafiek ---
+  const selectedData = active === "move" ? activityData : active === "jump" ? jumpData : activityData;
+  const thisWeekData = getDataForWeek(selectedData, 0);
+  const lastWeekData = getDataForWeek(selectedData, -1);
+
+  const chartLabels = thisWeekData.map(d => new Date(d.timestamp).toLocaleDateString());
+  const chartDatasets = [
+    { data: thisWeekData.map(d => d.value), color: () => "#00FF00", strokeWidth: 2, label: "Deze week" },
+    { data: lastWeekData.map(d => d.value), color: () => "#FFD700", strokeWidth: 2, label: "Vorige week" },
+  ];
 
   const statusMap: Record<number, { label: string; color: string }> = {
     0: { label: "Geen status", color: "#999" },
@@ -87,7 +111,6 @@ export default function ActivityScreen() {
     2: { label: "Chill", color: "#00FF00" },
     3: { label: "Probleem", color: "#FF4500" },
   };
-
   const currentStatus = statusData[statusData.length - 1]?.value || 0;
   const currentStatusLabel = statusMap[currentStatus].label;
 
@@ -100,27 +123,26 @@ export default function ActivityScreen() {
         <Text style={styles.statusText}>Status: {currentStatusLabel}</Text>
       </View>
 
+      {/* Legend voor vergelijking */}
+      <View style={styles.legendWrapper}>
+        <Text style={{ color: "#00FF00", fontWeight: "bold" }}>● Deze week</Text>
+        <Text style={{ color: "#FFD700", fontWeight: "bold" }}>● Vorige week</Text>
+      </View>
+
       {/* Grafiek */}
       <View style={styles.chartWrapper}>
         <Text style={styles.chartTitle}>
           {active === "sleep" ? "Slaapuren" : active === "move" ? "Beweging" : "Sprongen"}
         </Text>
         <LineChart
-          data={{
-            labels: statusData.map(d => new Date(d.timestamp).toLocaleTimeString()),
-            datasets: [{
-              data: active === "sleep" ? activityData.map(d => d.value / 60) :
-                    active === "move" ? activityData.map(d => d.value) :
-                    jumpData.map(d => d.value)
-            }]
-          }}
+          data={{ labels: chartLabels, datasets: chartDatasets }}
           width={Dimensions.get("window").width * 0.9}
           height={220}
           chartConfig={{
             backgroundGradientFrom: "#333",
             backgroundGradientTo: "#333",
             decimalPlaces: 1,
-            color: () => "#fff",
+            color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
             labelColor: () => "#fff",
           }}
           style={{ borderRadius: 16 }}
@@ -131,31 +153,10 @@ export default function ActivityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  statusWrapper: {
-    marginTop: -80,
-    marginBottom: 10,
-    padding: 10,
-    backgroundColor: "#222",
-    borderRadius: 10,
-  },
-  statusText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  chartWrapper: {
-    marginTop: 20,
-    marginBottom: 30,
-    alignItems: "center",
-  },
-  chartTitle: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  statusWrapper: { marginTop: -80, marginBottom: 10, padding: 10, backgroundColor: "#222", borderRadius: 10 },
+  statusText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  chartWrapper: { marginTop: 20, marginBottom: 30, alignItems: "center" },
+  chartTitle: { color: "#fff", fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  legendWrapper: { flexDirection: "row", justifyContent: "space-around", width: "60%", marginBottom: 10 },
 });
