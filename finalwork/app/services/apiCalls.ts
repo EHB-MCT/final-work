@@ -1,3 +1,4 @@
+// services/apiCalls.ts
 export interface CatLocation {
   probleem: boolean;
   chill: boolean;
@@ -8,16 +9,15 @@ export interface CatLocation {
   timestamp?: string;
   jump?: number;
   activityLevel?: number;
-  battery?: number;            
-  environment?: "indoors" | "outdoors"; 
+  battery?: number;
+  environment?: string;
 }
 
 export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
   try {
-    const response = await fetch("https://final-work-4-jtgv.onrender.com/api/cats");
-
+    const response = await fetch("https://final-work-5-frww.onrender.com/api/cats/latest");
     const text = await response.text();
-    if (!text) return null; // fallback bij lege response
+    if (!text) return null;
 
     let data;
     try {
@@ -27,9 +27,15 @@ export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
       return null;
     }
 
-    if (!Array.isArray(data) || data.length === 0) return null;
-
-    const latest = data[0]; // neem de eerste entry
+    // 💡 Check of data een array is of een object
+    let latest: any;
+    if (Array.isArray(data) && data.length > 0) {
+      latest = data[data.length - 1];
+    } else if (typeof data === "object" && data !== null) {
+      latest = data;
+    } else {
+      return null;
+    }
 
     return {
       latitude: latest.location?.latitude ?? 0,
@@ -37,12 +43,16 @@ export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
       timestamp: latest.timestamp,
       jump: latest.jump,
       activityLevel: latest.activityLevel,
-      probleem: latest.probleem ?? false,
-      chill: latest.chill ?? false,
+
+      // status flags
+      probleem: latest.status === "probleem",
+      chill: latest.status === "chill",
+      nieuwsgierig: latest.status === "nieuwsgierig",
       status: latest.status ?? "unknown",
-      nieuwsgierig: latest.nieuwsgierig ?? false,
-      battery: latest.battery ?? 0,                
-      environment: latest.environment ?? "indoors" 
+
+      // nieuwe hardware waarden
+      battery: latest.battery ?? 50,
+      environment: latest.environment ?? "indoors",
     };
   } catch (error) {
     console.error("Error when fetching cat location:", error);

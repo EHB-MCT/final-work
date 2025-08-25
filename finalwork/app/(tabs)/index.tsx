@@ -21,7 +21,6 @@ const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 
 type DataPoint = { timestamp: string; value: number };
 
-// Group values by weekday
 function groupByDay(data: DataPoint[]) {
   const grouped: Record<string, number> = {};
   data.forEach(({ timestamp, value }) => {
@@ -43,40 +42,52 @@ export default function HomeScreen() {
   const [activityData, setActivityData] = useState<DataPoint[]>([]);
   const [jumpData, setJumpData] = useState<DataPoint[]>([]);
 
-  // Load cat image URI
+  const [battery, setBattery] = useState<number>(50);
+  const [environment, setEnvironment] = useState<string>("indoors");
+
   useEffect(() => {
     AsyncStorage.getItem("profileImage")
       .then((uri) => uri && setCatImageUri(uri))
       .catch(console.error);
   }, []);
 
-  // Fetch latest cat location and activity every 10s
   useEffect(() => {
-    const interval = setInterval(async () => {
+    let isMounted = true;
+
+    const fetchData = async () => {
       try {
         const loc = await fetchLatestCatLocation();
-        if (loc?.timestamp) {
-          const ts = loc.timestamp as string;
-          setActivityData((prev) => {
-            if (prev.length === 0 || prev[prev.length - 1].timestamp !== ts) {
-              return [...prev, { timestamp: ts, value: loc.activityLevel ?? 0 }];
-            }
-            return prev;
-          });
-          setJumpData((prev) => {
-            if (prev.length === 0 || prev[prev.length - 1].timestamp !== ts) {
-              return [...prev, { timestamp: ts, value: loc.jump ?? 0 }];
-            }
-            return prev;
-          });
-          setCatLocation({ latitude: loc.latitude, longitude: loc.longitude });
-        }
+        if (!loc?.timestamp || !isMounted) return;
+
+        const ts = loc.timestamp as string;
+
+        setActivityData((prev) =>
+          prev.length === 0 || prev[prev.length - 1].timestamp !== ts
+            ? [...prev, { timestamp: ts, value: loc.activityLevel ?? 0 }]
+            : prev
+        );
+
+        setJumpData((prev) =>
+          prev.length === 0 || prev[prev.length - 1].timestamp !== ts
+            ? [...prev, { timestamp: ts, value: loc.jump ?? 0 }]
+            : prev
+        );
+
+        setCatLocation({ latitude: loc.latitude, longitude: loc.longitude });
+        setBattery(loc.battery ?? 50);
+        setEnvironment(loc.environment ?? "indoors");
       } catch (e) {
         console.error("Fetch error:", e);
       }
-    }, 10000);
+    };
 
-    return () => clearInterval(interval);
+    fetchData(); // direct ophalen bij mount
+    const interval = setInterval(fetchData, 10000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const moveByDay = groupByDay(activityData);
@@ -126,10 +137,12 @@ export default function HomeScreen() {
             )}
           </Marker>
         </MapView>
-        <Text style={styles.overlayText}>Indoors</Text>
+
+        <Text style={styles.overlayText}>
+          {environment === "indoors" ? "Indoors" : "Outdoors"}
+        </Text>
       </View>
 
-      {/* Activiteit & Slaap Boxen */}
       <View style={styles.dataContainer}>
         <ImageBackground
           source={require("../../assets/images/dataBG.png")}
@@ -150,7 +163,6 @@ export default function HomeScreen() {
         </ImageBackground>
       </View>
 
-      {/* Circle buttons */}
       <View style={styles.circleContainer}>
         <View style={styles.circle}>
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
@@ -162,7 +174,10 @@ export default function HomeScreen() {
 
         <View style={styles.circle}>
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
-          <CircularProgress progress={75} size={135} strokeWidth={10} />
+          <CircularProgress progress={battery} size={135} strokeWidth={10} />
+          <Text style={{ color: "white", marginTop: 8, fontWeight: "bold" }}>
+            {battery}%
+          </Text>
         </View>
       </View>
     </View>
@@ -170,20 +185,9 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mapWrapper: {
-    top: 50,
-  },
-  map: {
-    width: Dimensions.get("window").width - 32,
-    height: Dimensions.get("window").height / 2.5,
-    borderRadius: 10,
-  },
+  container: { flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center" },
+  mapWrapper: { top: 50 },
+  map: { width: Dimensions.get("window").width - 32, height: Dimensions.get("window").height / 2.5, borderRadius: 10 },
   overlayText: {
     position: "absolute",
     top: 50,
@@ -196,37 +200,11 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 6,
   },
-  dataContainer: {
-    position: "absolute",
-    bottom: 200,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    paddingHorizontal: 20,
-  },
-  dataBox: {
-    width: 150,
-    height: 100,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dataText: {
-    color: "#02433B",
-    fontSize: 19,
-    fontWeight: "bold",
-  },
-  valueText: {
-    color: "#02433B",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 8,
-  },
-  circleContainer: {
-    top: 125,
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  dataContainer: { position: "absolute", bottom: 200, left: 0, right: 0, flexDirection: "row", justifyContent: "space-evenly", paddingHorizontal: 20 },
+  dataBox: { width: 150, height: 100, justifyContent: "center", alignItems: "center" },
+  dataText: { color: "#02433B", fontSize: 19, fontWeight: "bold" },
+  valueText: { color: "#02433B", fontSize: 16, fontWeight: "bold", marginTop: 8 },
+  circleContainer: { top: 125, flexDirection: "row", alignItems: "center" },
   circle: {
     width: 150,
     height: 150,
