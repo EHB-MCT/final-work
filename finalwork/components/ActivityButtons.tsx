@@ -14,7 +14,7 @@ export default function ActivityButtons({ active, onPress }: Props) {
     { key: "sleep", label: "slaap" },
     { key: "move", label: "beweging" },
     { key: "jump", label: "sprongen" },
-    { key: "status", label: "status" }, 
+   
   ];
 
   return (
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 0,
     paddingHorizontal: 8,
-    paddingVertical: 16,
+    paddingVertical: 150,
     flexDirection: "row",
   },
   button: {

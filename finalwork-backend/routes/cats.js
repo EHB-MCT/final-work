@@ -4,7 +4,7 @@ const Cat = require("../models/Cat");
 
 // ✅ POST nieuwe kat toevoegen
 router.post("/", async (req, res) => {
-  const { name, ownerId, activityLevel, location, status } = req.body;
+  const { name, ownerId, activityLevel, location, status, battery, environment } = req.body;
 
   const cat = new Cat({
     name,
@@ -12,6 +12,8 @@ router.post("/", async (req, res) => {
     activityLevel,
     location,
     status,
+    battery,
+    environment,
   });
 
   try {
@@ -23,6 +25,21 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+// ✅ GET laatste kat (op timestamp)
+router.get("/latest", async (req, res) => {
+  try {
+    const latestCat = await Cat.findOne().sort({ timestamp: -1 }); // laatste entry
+    if (!latestCat) {
+      return res.status(404).json({ message: "Geen katten gevonden" });
+    }
+    res.json(latestCat);
+  } catch (error) {
+    console.error("Fout bij ophalen laatste kat:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ✅ GET alle katten
 router.get("/", async (req, res) => {
   try {
@@ -31,6 +48,28 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("Fout bij ophalen katten:", error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// ✅ PATCH alleen batterij & environment updaten
+router.patch("/:id", async (req, res) => {
+  const { battery, environment } = req.body;
+
+  try {
+    const updatedCat = await Cat.findByIdAndUpdate(
+      req.params.id,
+      { battery, environment },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCat) {
+      return res.status(404).json({ message: "Kat niet gevonden" });
+    }
+
+    res.json(updatedCat);
+  } catch (error) {
+    console.error("Fout bij updaten van Cat:", error);
+    res.status(400).json({ message: error.message });
   }
 });
 

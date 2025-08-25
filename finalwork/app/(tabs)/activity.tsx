@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Dimensions } from "react-native";
+import { StyleSheet, View, Text, Dimensions, ScrollView } from "react-native";
 import { colors } from "@/constants/Colors";
 import ActivityButtons from "@/components/ActivityButtons";
 import { fetchLatestCatLocation } from "../services/apiCalls";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LineChart } from "react-native-chart-kit";
 
-type ActivityType = "sleep" | "move" | "jump" | "status";
+type ActivityType = "sleep" | "move" | "jump";
 
 interface DataPoint {
   timestamp: string;
@@ -13,8 +14,7 @@ interface DataPoint {
 }
 
 export default function ActivityScreen() {
-  const [active, setActive] = useState<ActivityType>("status");
-
+  const [active, setActive] = useState<ActivityType>("move");
   const [activityData, setActivityData] = useState<DataPoint[]>([]);
   const [jumpData, setJumpData] = useState<DataPoint[]>([]);
   const [statusData, setStatusData] = useState<DataPoint[]>([]);
@@ -78,7 +78,6 @@ export default function ActivityScreen() {
     return () => clearInterval(interval);
   }, [activityData, jumpData, statusData]);
 
-  // Functies om totaal/slaapuren te berekenen
   const total = (data: DataPoint[]) => data.reduce((sum, d) => sum + d.value, 0);
   const totalHours = (total(activityData) / 60).toFixed(1);
 
@@ -89,29 +88,45 @@ export default function ActivityScreen() {
     3: { label: "Probleem", color: "#FF4500" },
   };
 
-  const statusLabel = statusMap[statusData[statusData.length - 1]?.value || 0]?.label || "Geen status";
+  const currentStatus = statusData[statusData.length - 1]?.value || 0;
+  const currentStatusLabel = statusMap[currentStatus].label;
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ alignItems: "center", paddingTop: 80 }}>
       <ActivityButtons active={active} onPress={setActive} />
 
-      <View style={styles.card}>
-        {active === "sleep" && (
-          <Text style={styles.cardText}>Slaap: {totalHours} uur</Text>
-        )}
-        {active === "move" && (
-          <Text style={styles.cardText}>Beweging: {total(activityData)}</Text>
-        )}
-        {active === "jump" && (
-          <Text style={styles.cardText}>Sprongen: {total(jumpData)}</Text>
-        )}
-        {active === "status" && (
-          <View style={[styles.statusCard, { backgroundColor: statusMap[statusData[statusData.length - 1]?.value || 0].color }]}>
-            <Text style={styles.statusText}>{statusLabel}</Text>
-          </View>
-        )}
+      {/* Huidige status boven de grafiek */}
+      <View style={styles.statusWrapper}>
+        <Text style={styles.statusText}>Status: {currentStatusLabel}</Text>
       </View>
-    </View>
+
+      {/* Grafiek */}
+      <View style={styles.chartWrapper}>
+        <Text style={styles.chartTitle}>
+          {active === "sleep" ? "Slaapuren" : active === "move" ? "Beweging" : "Sprongen"}
+        </Text>
+        <LineChart
+          data={{
+            labels: statusData.map(d => new Date(d.timestamp).toLocaleTimeString()),
+            datasets: [{
+              data: active === "sleep" ? activityData.map(d => d.value / 60) :
+                    active === "move" ? activityData.map(d => d.value) :
+                    jumpData.map(d => d.value)
+            }]
+          }}
+          width={Dimensions.get("window").width * 0.9}
+          height={220}
+          chartConfig={{
+            backgroundGradientFrom: "#333",
+            backgroundGradientTo: "#333",
+            decimalPlaces: 1,
+            color: () => "#fff",
+            labelColor: () => "#fff",
+          }}
+          style={{ borderRadius: 16 }}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
@@ -119,33 +134,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    alignItems: "center",
-    paddingTop: 100,
   },
-  card: {
-    marginTop: 30,
-    width: Dimensions.get("window").width * 0.8,
-    paddingVertical: 50,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#333",
-  },
-  cardText: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  statusCard: {
-    width: "100%",
-    paddingVertical: 60,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
+  statusWrapper: {
+    marginTop: -80,
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: "#222",
+    borderRadius: 10,
   },
   statusText: {
-    fontSize: 28,
+    color: "#fff",
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#000",
+  },
+  chartWrapper: {
+    marginTop: 20,
+    marginBottom: 30,
+    alignItems: "center",
+  },
+  chartTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
 });
