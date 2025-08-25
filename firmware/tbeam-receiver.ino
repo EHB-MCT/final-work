@@ -1,88 +1,112 @@
-// This code is for the T-Beam ESP32 LoRa GPS module to send GPS coordinates over LoRa.
-// -> Doesn't work anymore, we use tbeam-sender.ino instead, to send data directly over wi-fi to the server.
-
-
-#include <XPowersLib.h>
-#include <TinyGPSPlus.h>
-#include <LoRa.h>
 #include <SPI.h>
-#include <Wire.h>
-
-
-XPowersAXP2101 PMU;
-#define PMU_I2C_ADDRESS 0x34
-#define GPS_RX 34
-#define GPS_TX 12
-HardwareSerial gpsSerial(1); // UART1
-TinyGPSPlus gps;
-
+#include <LoRa.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 
 #define LORA_SCK 5
 #define LORA_MISO 19
 #define LORA_MOSI 27
 #define LORA_SS 18
+#define LORA_DI0 26
 #define LORA_RST 23
-#define LORA_DIO0 26
-#define LORA_BAND 868E6 
+
+// Wi-Fi credentials
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+const char* endpoint = "https://final-work-5-frww.onrender.com/api/cats";
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
+  while (!Serial && millis() < 5000);
 
+  Serial.println("T-Beam Binary Receiver with Wi-Fi POST");
 
-  Wire.begin();
-  if (!PMU.begin(Wire, PMU_I2C_ADDRESS, SDA, SCL)) {
-    Serial.println("PMU failed!");
-    while (1);
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
-  PMU.enableDC1();
-  PMU.enableDC3();
-  PMU.enableALDO3(); // GPS power
-  PMU.setALDO3Voltage(3300);
-  PMU.enableALDO2(); // GPS antenna power
+  Serial.println("\nWi-Fi connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
 
-
-  gpsSerial.begin(115200, SERIAL_8N1, GPS_RX, GPS_TX);
-
-
+  // LoRa setup
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
-  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
-  
-  if (!LoRa.begin(LORA_BAND)) {
-    Serial.println("LoRa failed!");
-    while (1);
-  }
-  
-  
-  LoRa.setSyncWord(0x34);       
-  LoRa.setSpreadingFactor(7);  
-  LoRa.setSignalBandwidth(125E3); 
-  LoRa.setCodingRate4(5);       
-  LoRa.setTxPower(14);          
+  pinMode(LORA_RST, OUTPUT);
+  digitalWrite(LORA_RST, LOW);
+  delay(10);
+  digitalWrite(LORA_RST, HIGH);
+  delay(10);
 
-  Serial.println("System ready");
+  LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
+  if (!LoRa.begin(868E6)) {
+    Serial.println("LoRa init failed!");
+    while (true);
+  }
+  LoRa.setSpreadingFactor(7);
+  LoRa.setSignalBandwidth(125E3);
+  LoRa.setCodingRate4(5);
+
+  Serial.println("Receiver ready...");
 }
 
 void loop() {
-  // Process GPS data
-  while (gpsSerial.available()) {
-    gps.encode(gpsSerial.read());
+  int packetSize = LoRa.parsePacket();
+  if (packetSize == 13) {
+    uint8_t buffer[13];
+    for (int i = 0; i < 13; i++) buffer[i] = LoRa.read();
+
+    int32_t lat_i, lon_i;
+    uint16_t movementSum, lux;
+    uint8_t flags;
+
+    memcpy(&lat_i, buffer, 4);
+    memcpy(&lon_i, buffer + 4, 4);
+    memcpy(&movementSum, buffer + 8, 2);
+    memcpy(&lux, buffer + 10, 2);
+    flags = buffer[12];
+
+    float lat = lat_i / 1000000.0;
+    float lon = lon_i / 1000000.0;
+    bool sleeping = flags & 0b001;
+    uint8_t status = (flags >> 1) & 0b11;
+
+    Serial.println("Decoded Packet:");
+    Serial.printf("Lat: %.6f Lon: %.6f\n", lat, lon);
+    Serial.printf("Movement: %d Lux: %d\n", movementSum, lux);
+    Serial.printf("Sleeping: %d Status: %d\n", sleeping, status);
+    Serial.printf("RSSI: %d\n", LoRa.packetRssi());
+    Serial.println("---------------------");
+
+    // Send POST request
+    if (WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+      http.begin(endpoint);
+      http.addHeader("Content-Type", "application/json");
+
+      String payload = "{";
+      payload += "\"latitude\":" + String(lat, 6) + ",";
+      payload += "\"longitude\":" + String(lon, 6) + ",";
+      payload += "\"movement\":" + String(movementSum) + ",";
+      payload += "\"lux\":" + String(lux) + ",";
+      payload += "\"sleeping\":" + String(sleeping ? "true" : "false") + ",";
+      payload += "\"status\":" + String(status);
+      payload += "}";
+
+      int httpResponseCode = http.POST(payload);
+      if (httpResponseCode > 0) {
+        Serial.printf("POST response code: %d\n", httpResponseCode);
+      } else {
+        Serial.printf("Error on POST: %s\n", http.errorToString(httpResponseCode).c_str());
+      }
+      http.end();
+    }
+  } else if (packetSize > 0) {
+    Serial.printf("Unexpected packet size: %d\n", packetSize);
   }
 
-  // When valid GPS available
-  if (gps.location.isUpdated() && gps.location.isValid()) {
-    String payload = 
-      String(gps.location.lat(), 6) + "," + 
-      String(gps.location.lng(), 6);
-
-    Serial.print("Sending: ");
-    Serial.println(payload);
-
-    // Send LoRa packet
-    LoRa.beginPacket();
-    LoRa.print(payload);
-    LoRa.endPacket();
-  }
-
-  delay(2000); // Send every 2 seconds
+  delay(100); // todo: try to prevent loop, might need a bigger delay?
 }
