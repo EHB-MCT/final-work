@@ -70,7 +70,7 @@ export default function HomeScreen() {
 
         setJumpData((prev) =>
           prev.length === 0 || prev[prev.length - 1].timestamp !== ts
-            ? [...prev, { timestamp: ts, value: loc.jump ?? 0 }]
+            ? [...prev, { timestamp: ts, value: loc.jumps ?? 0 }]
             : prev
         );
 
@@ -168,6 +168,7 @@ export default function HomeScreen() {
           <Text style={styles.valueText}>{totalHours} u</Text>
         </ImageBackground>
       </View>
+
       <View style={styles.circleContainer}>
         <TouchableOpacity
           style={styles.circle}
@@ -175,12 +176,19 @@ export default function HomeScreen() {
           onPress={triggerBuzzer}
         >
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
-          <Text
-            style={{ color: "white", fontWeight: "bold", textAlign: "center" }}
-          >
-            Speel geluid af
-            <SoundIcon />
-          </Text>
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{
+                color: "white",
+                fontWeight: "bold",
+                textAlign: "center",
+                marginBottom: 4,
+              }}
+            >
+              Speel geluid af
+            </Text>
+            <SoundIcon width={32} height={32} />
+          </View>
         </TouchableOpacity>
 
         <View

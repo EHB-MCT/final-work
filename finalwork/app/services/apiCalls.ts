@@ -17,7 +17,7 @@ export interface CatLocation {
 export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
   try {
     const response = await fetch(
-      "https://final-work-5-frww.onrender.com/api/cats/latest"
+      "https://final-work-5-frww.onrender.com/api/cats"
     );
     const text = await response.text();
     if (!text) return null;

@@ -57,8 +57,9 @@ export default function ActivityScreen() {
           key: string,
           setFn: React.Dispatch<React.SetStateAction<DataPoint[]>>
         ) => {
+          const safeValue = Number.isFinite(newVal) ? newVal : 0;
           if (existing.length === 0 || existing[existing.length - 1].timestamp !== ts) {
-            const updated = [...existing, { timestamp: ts, value: newVal }];
+            const updated = [...existing, { timestamp: ts, value: safeValue }];
             setFn(updated);
             await AsyncStorage.setItem(key, JSON.stringify(updated));
           }
@@ -94,24 +95,46 @@ export default function ActivityScreen() {
 
     return data.filter(d => {
       const ts = new Date(d.timestamp);
-      return ts >= startOfWeek && ts < endOfWeek;
+      return ts >= startOfWeek && ts < endOfWeek && Number.isFinite(d.value);
     });
   };
 
   // --- Bereid data voor grafiek ---
-  const selectedData =
-    active === "move" ? activityData :
-    active === "jump" ? jumpData :
-    sleepData;
+  const selectedData = active === "move" ? activityData : active === "jump" ? jumpData : sleepData ?? [];
 
   const thisWeekData = getDataForWeek(selectedData, 0);
   const lastWeekData = getDataForWeek(selectedData, -1);
 
-  const chartLabels = thisWeekData.map(d => new Date(d.timestamp).toLocaleDateString());
+  const chartLabels = thisWeekData.length
+    ? thisWeekData.map(d => new Date(d.timestamp).toLocaleDateString())
+    : ["-"];
+
   const chartDatasets = [
-    { data: thisWeekData.map(d => d.value), color: () => "#00FF00", strokeWidth: 2, label: "Deze week" },
-    { data: lastWeekData.map(d => d.value), color: () => "#FFD700", strokeWidth: 2, label: "Vorige week" },
+    {
+      data: thisWeekData.length
+        ? thisWeekData.map(d => Number.isFinite(d.value) ? d.value : 0)
+        : [0],
+      color: () => "#00FF00",
+      strokeWidth: 2,
+      label: "Deze week",
+    },
+    {
+      data: lastWeekData.length
+        ? lastWeekData.map(d => Number.isFinite(d.value) ? d.value : 0)
+        : [0],
+      color: () => "#FFD700",
+      strokeWidth: 2,
+      label: "Vorige week",
+    },
   ];
+
+  const safeChartData = {
+    labels: chartLabels,
+    datasets: chartDatasets.map(ds => ({
+      ...ds,
+      data: ds.data.map(v => (Number.isFinite(v) ? v : 0)),
+    })),
+  };
 
   const statusMap: Record<number, { label: string; color: string }> = {
     0: { label: "Geen status", color: "#999" },
@@ -119,31 +142,28 @@ export default function ActivityScreen() {
     2: { label: "Chill", color: "#00FF00" },
     3: { label: "Probleem", color: "#FF4500" },
   };
-  const currentStatus = statusData[statusData.length - 1]?.value || 0;
+  const currentStatus = statusData[statusData.length - 1]?.value ?? 0;
   const currentStatusLabel = statusMap[currentStatus].label;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ alignItems: "center", paddingTop: 80 }}>
       <ActivityButtons active={active} onPress={setActive} />
 
-      {/* Huidige status boven de grafiek */}
       <View style={styles.statusWrapper}>
         <Text style={styles.statusText}>Status: {currentStatusLabel}</Text>
       </View>
 
-      {/* Legend voor vergelijking */}
       <View style={styles.legendWrapper}>
         <Text style={{ color: "#00FF00", fontWeight: "bold" }}>● Deze week</Text>
         <Text style={{ color: "#FFD700", fontWeight: "bold" }}>● Vorige week</Text>
       </View>
 
-      {/* Grafiek */}
       <View style={styles.chartWrapper}>
         <Text style={styles.chartTitle}>
           {active === "sleep" ? "Slaapuren" : active === "move" ? "Beweging" : "Sprongen"}
         </Text>
         <LineChart
-          data={{ labels: chartLabels, datasets: chartDatasets }}
+          data={safeChartData}
           width={Dimensions.get("window").width * 0.9}
           height={220}
           chartConfig={{
