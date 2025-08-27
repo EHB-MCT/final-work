@@ -7,11 +7,12 @@ import {
   Image,
   Platform,
   ImageBackground,
+  TouchableOpacity,
 } from "react-native";
 import MapView, { Marker, LatLng } from "react-native-maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import mapStyle from "@/assets/mapStyle.json";
-import { fetchLatestCatLocation } from "../services/apiCalls";
+import { fetchLatestCatLocation, triggerBuzzer } from "../services/apiCalls";
 import { colors } from "@/constants/Colors";
 import CircularProgress from "@/components/CircularProgress";
 import { BlurView } from "expo-blur";
@@ -104,7 +105,12 @@ export default function HomeScreen() {
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
       >
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0)" }]} />
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: "rgba(0,0,0,0)" },
+          ]}
+        />
       </ImageBackground>
 
       <View style={styles.mapWrapper}>
@@ -162,22 +168,36 @@ export default function HomeScreen() {
           <Text style={styles.valueText}>{totalHours} u</Text>
         </ImageBackground>
       </View>
-
       <View style={styles.circleContainer}>
-        <View style={styles.circle}>
+        <TouchableOpacity
+          style={styles.circle}
+          activeOpacity={0.7}
+          onPress={triggerBuzzer}
+        >
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
-          <Text style={{ color: "white", fontWeight: "bold", textAlign: "center" }}>
+          <Text
+            style={{ color: "white", fontWeight: "bold", textAlign: "center" }}
+          >
             Speel geluid af
             <SoundIcon />
           </Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.circle}>
+        <View
+          style={{
+            width: 150,
+            height: 150,
+            borderRadius: 100,
+            backgroundColor: "rgba(121, 121, 121, 0.39)",
+            borderWidth: 9,
+            borderColor: "#D9D9D9",
+            overflow: "hidden",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
           <CircularProgress progress={battery} size={135} strokeWidth={10} />
-          <Text style={{ color: "white", marginTop: 8, fontWeight: "bold" }}>
-            {battery}%
-          </Text>
         </View>
       </View>
     </View>
@@ -185,9 +205,18 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center" },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   mapWrapper: { top: 50 },
-  map: { width: Dimensions.get("window").width - 32, height: Dimensions.get("window").height / 2.5, borderRadius: 10 },
+  map: {
+    width: Dimensions.get("window").width - 32,
+    height: Dimensions.get("window").height / 2.5,
+    borderRadius: 10,
+  },
   overlayText: {
     position: "absolute",
     top: 50,
@@ -200,10 +229,28 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 6,
   },
-  dataContainer: { position: "absolute", bottom: 200, left: 0, right: 0, flexDirection: "row", justifyContent: "space-evenly", paddingHorizontal: 20 },
-  dataBox: { width: 150, height: 100, justifyContent: "center", alignItems: "center" },
+  dataContainer: {
+    position: "absolute",
+    bottom: 200,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    paddingHorizontal: 20,
+  },
+  dataBox: {
+    width: 150,
+    height: 100,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   dataText: { color: "#02433B", fontSize: 19, fontWeight: "bold" },
-  valueText: { color: "#02433B", fontSize: 16, fontWeight: "bold", marginTop: 8 },
+  valueText: {
+    color: "#02433B",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 8,
+  },
   circleContainer: { top: 125, flexDirection: "row", alignItems: "center" },
   circle: {
     width: 150,

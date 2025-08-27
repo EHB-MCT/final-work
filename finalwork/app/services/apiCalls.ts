@@ -15,7 +15,9 @@ export interface CatLocation {
 
 export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
   try {
-    const response = await fetch("https://final-work-5-frww.onrender.com/api/cats/latest");
+    const response = await fetch(
+      "https://final-work-5-frww.onrender.com/api/cats/latest"
+    );
     const text = await response.text();
     if (!text) return null;
 
@@ -59,3 +61,27 @@ export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
     return null;
   }
 };
+
+export async function triggerBuzzer(): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `https://final-work-5-frww.onrender.com/api/buzzer/trigger`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Failed to trigger buzzer:", response.status);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error triggering buzzer:", error);
+    return false;
+  }
+}

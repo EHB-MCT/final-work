@@ -4,7 +4,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const catLocationRoutes = require("../routes/catLocations");
 const catsRouter = require("../routes/cats");
-
+const buzzerRoutes = require("../routes/buzzer");
 
 dotenv.config();
 
@@ -26,3 +26,4 @@ mongoose
 
 app.use("/api/cat-locations", catLocationRoutes);
 app.use("/api/cats", catsRouter);
+app.use("/api/buzzer", buzzerRoutes);
