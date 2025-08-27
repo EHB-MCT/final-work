@@ -13,26 +13,29 @@ const catSchema = new mongoose.Schema({
 
   timestamp: { type: Date, default: Date.now },
 
-  status: { 
-    type: String, 
-    enum: ["nieuwsgierig", "chill", "probleem"], 
-    default: "chill" 
+  status: {
+    type: String,
+    enum: ["nieuwsgierig", "chill", "probleem"],
+    default: "chill"
   },
 
 
-  battery: { 
-    type: Number, 
-    min: 0, 
-    max: 100, 
-    default: 100 
+  battery: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 100
   },
 
-  
+
   environment: {
     type: String,
     enum: ["indoors", "outdoors"],
     default: "indoors"
-  }
+  },
+
+  sleep: { type: Number, default: 0 },
+  jumps: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model('Cat', catSchema);

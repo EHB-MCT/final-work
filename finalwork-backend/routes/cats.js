@@ -14,6 +14,8 @@ router.post("/", async (req, res) => {
     status,
     battery,
     environment,
+    sleep,
+    jumps
   });
 
   try {
