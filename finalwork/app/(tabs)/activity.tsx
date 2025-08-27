@@ -17,21 +17,24 @@ export default function ActivityScreen() {
   const [active, setActive] = useState<ActivityType>("move");
   const [activityData, setActivityData] = useState<DataPoint[]>([]);
   const [jumpData, setJumpData] = useState<DataPoint[]>([]);
+  const [sleepData, setSleepData] = useState<DataPoint[]>([]);
   const [statusData, setStatusData] = useState<DataPoint[]>([]);
 
   // Laden van AsyncStorage bij start
   useEffect(() => {
     const loadData = async () => {
       try {
-        const keys = ["activityData", "jumpData", "statusData"];
+        const keys = ["activityData", "jumpData", "sleepData", "statusData"];
         const results = await AsyncStorage.multiGet(keys);
 
         const act = results[0][1];
         const jump = results[1][1];
-        const status = results[2][1];
+        const sleep = results[2][1];
+        const status = results[3][1];
 
         if (act) setActivityData(JSON.parse(act));
         if (jump) setJumpData(JSON.parse(jump));
+        if (sleep) setSleepData(JSON.parse(sleep));
         if (status) setStatusData(JSON.parse(status));
       } catch (e) {
         console.error("Fout bij laden AsyncStorage", e);
@@ -62,7 +65,8 @@ export default function ActivityScreen() {
         };
 
         await appendData(activityData, loc.activityLevel ?? 0, "activityData", setActivityData);
-        await appendData(jumpData, loc.jump ?? 0, "jumpData", setJumpData);
+        await appendData(jumpData, loc.jumps ?? 0, "jumpData", setJumpData);
+        await appendData(sleepData, loc.sleep ?? 0, "sleepData", setSleepData);
 
         const statusCode =
           loc.status === "nieuwsgierig" ? 1 :
@@ -76,7 +80,7 @@ export default function ActivityScreen() {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [activityData, jumpData, statusData]);
+  }, [activityData, jumpData, sleepData, statusData]);
 
   // --- Functie voor weekfilter ---
   const getDataForWeek = (data: DataPoint[], weekOffset = 0): DataPoint[] => {
@@ -95,7 +99,11 @@ export default function ActivityScreen() {
   };
 
   // --- Bereid data voor grafiek ---
-  const selectedData = active === "move" ? activityData : active === "jump" ? jumpData : activityData;
+  const selectedData =
+    active === "move" ? activityData :
+    active === "jump" ? jumpData :
+    sleepData;
+
   const thisWeekData = getDataForWeek(selectedData, 0);
   const lastWeekData = getDataForWeek(selectedData, -1);
 

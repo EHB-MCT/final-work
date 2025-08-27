@@ -4,7 +4,7 @@ const Cat = require("../models/Cat");
 
 // ✅ POST nieuwe kat toevoegen
 router.post("/", async (req, res) => {
-  const { name, ownerId, activityLevel, location, status, battery, environment } = req.body;
+  const { name, ownerId, activityLevel, location, status, battery, environment,sleep,jumps } = req.body;
 
   const cat = new Cat({
     name,

@@ -2,7 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from "react-native";
 import { colors } from "@/constants/Colors";
 
-type ActivityType = "sleep" | "move" | "jump" | "status";
+type ActivityType = "sleep" | "move" | "jump" ;
 
 type Props = {
   active: ActivityType;

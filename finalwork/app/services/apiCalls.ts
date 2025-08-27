@@ -7,7 +7,8 @@ export interface CatLocation {
   latitude: number;
   longitude: number;
   timestamp?: string;
-  jump?: number;
+  jumps?: number;      
+  sleep?: number;       
   activityLevel?: number;
   battery?: number;
   environment?: string;
@@ -43,7 +44,8 @@ export const fetchLatestCatLocation = async (): Promise<CatLocation | null> => {
       latitude: latest.location?.latitude ?? 0,
       longitude: latest.location?.longitude ?? 0,
       timestamp: latest.timestamp,
-      jump: latest.jump,
+      jumps: latest.jumps ?? 0,        
+      sleep: latest.sleep ?? 0,       
       activityLevel: latest.activityLevel,
 
       // status flags
