@@ -52,43 +52,7 @@ export default function Header() {
             alignItems: "center",
             justifyContent: "center",
           }}
-        >
-          <View
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 100,
-              backgroundColor: "#63B231",
-              overflow: "hidden",
-              justifyContent: "center",
-              alignItems: "center",
-              marginRight: 5,
-              // dropshadow
-              shadowColor: "#63B231",
-              shadowOffset: {
-                width: 0,
-                height: 0,
-              },
-              shadowOpacity: 1,
-              shadowRadius: 5,
-              elevation: 2,
-            }}
-          >
-            {/* <BlurView intensity={20} style={StyleSheet.absoluteFill} /> */}
-          </View>
-
-          <Text
-            style={{
-              color: "#000000ff",
-              fontSize: 18,
-              // marginTop: 8,
-              textAlign: "center",
-            }}
-          >
-            Verbonden
-            {/* TODO: make connection status variable if no data has been received after 1 minute(?) */}
-          </Text>
-        </View>
+        ></View>
       </View>
     </View>
   );

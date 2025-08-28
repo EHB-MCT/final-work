@@ -99,10 +99,19 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   button: {
-    backgroundColor: "#333",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    backgroundColor: "#FD9003",
+    // dropshadow
+    shadowColor: "#FD9003",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 2,
   },
   buttonText: {
     color: "#fff",

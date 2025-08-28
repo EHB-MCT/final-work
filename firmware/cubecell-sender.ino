@@ -1,218 +1,169 @@
 #include "LoRaWan_APP.h"
 #include "GPS_Air530Z.h"
 #include <Wire.h>
+#include <BH1750.h>
+#include <MPU6050_light.h>
 
-// --- LoRa config ---
-#define RF_FREQUENCY        868000000
-#define TX_OUTPUT_POWER     14
-#define LORA_BANDWIDTH      0
-#define LORA_SPREADING_FACTOR 7
-#define LORA_CODINGRATE     1
-#define LORA_PREAMBLE_LENGTH 8
+#define BUZZER_PIN GPIO2
+#define SLEEP_INTERVAL 60000 // send LoRa packets every 60 seconds, than go to sleep
+#define BUZZER_RX_WINDOW 30000
 
-// --- Sleep/GPS ---
-#define GPS_TIMEOUT         20000
-#define GPS_CONTINUE_TIME   5000
-#define SLEEP_INTERVAL      60000
-
-// --- Battery config ---
-#define BATTERY_PIN         ADC 
-#define FULL_VOLTAGE        4.2 
-#define EMPTY_VOLTAGE       3.3 
-#define VOLTAGE_DIVIDER     2.0 
-
-// --- Sensor addresses ---
-#define BH1750_ADDRESS      0x23
-#define BH1750_CONTINUOUS_HIGH_RES_MODE 0x10
-
-// --- Globals ---
 RadioEvents_t RadioEvents;
 Air530ZClass GPS;
 TimerEvent_t wakeTimer;
+
+BH1750 lightMeter;
+MPU6050 mpu(Wire);
 
 double latitude = 0.0;
 double longitude = 0.0;
 float lux = 0.0;
 uint16_t movementSum = 0;
-uint8_t flags = 0;  // bit0: sleep, bit1-2: status
-uint8_t batteryPercent = 0;
-float batteryVoltage = 0.0;
+uint8_t flags = 0;
+uint8_t battery = 100;
+uint16_t sleepTime = 0;
+uint16_t jumps = 0;
+unsigned long immobileStart = 0;
 
-void VextON(void) { pinMode(Vext, OUTPUT); digitalWrite(Vext, LOW); }
-void VextOFF(void) { pinMode(Vext, OUTPUT); digitalWrite(Vext, HIGH); }
+const float SLEEP_THRESHOLD = 0.05;
+const unsigned long MIN_SLEEP_PERIOD = 5 * 60 * 1000;
+const float JUMP_THRESHOLD = 2.0;
 
-// read battery
-void readBattery() {
-  int adcValue = analogRead(BATTERY_PIN);
-  
-  batteryVoltage = (adcValue * 3.3 / 4095.0) * VOLTAGE_DIVIDER;
-  
-  // Calculate battery percentage 
-  batteryPercent = constrain(
-    (int)((batteryVoltage - EMPTY_VOLTAGE) / (FULL_VOLTAGE - EMPTY_VOLTAGE) * 100),
-    0, 100
-  );
-  
-  Serial.printf("Battery: %.2fV (%d%%)\n", batteryVoltage, batteryPercent);
+bool buzzerWindowActive = false;
+unsigned long buzzerWindowStart = 0;
+
+void VextON()  { pinMode(Vext, OUTPUT); digitalWrite(Vext, LOW); }
+void VextOFF() { pinMode(Vext, OUTPUT); digitalWrite(Vext, HIGH); }
+
+void onWake() {}
+
+void onRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr) {
+    if (buzzerWindowActive && millis() - buzzerWindowStart < BUZZER_RX_WINDOW) {
+        if (size > 0 && payload[0] == 0x01) {
+            Serial.println("Buzzer triggered via LoRa!");
+            digitalWrite(BUZZER_PIN, HIGH);
+            delay(2000);
+            digitalWrite(BUZZER_PIN, LOW);
+        }
+    }
 }
 
-// Function to read light sensor (BH1750)
-float readLightSensor() {
-  Wire.beginTransmission(BH1750_ADDRESS);
-  Wire.write(BH1750_CONTINUOUS_HIGH_RES_MODE);
-  Wire.endTransmission();
-  delay(180); // Wait for measurement
-  
-  Wire.requestFrom((uint16_t)BH1750_ADDRESS, (uint8_t)2, (bool)true);
-  if (Wire.available() == 2) {
-    uint16_t value = Wire.read() << 8 | Wire.read();
-    return value / 1.2; // Convert to lux
-  }
-  return 0.0;
-}
-
-// Function to read MPU6050 accelerometer
-void readMPU6050(float &ax, float &ay, float &az) {
-
-  Wire.beginTransmission(0x68);
-  Wire.write(0x6B); 
-  Wire.write(0);    
-  Wire.endTransmission(true);
-  
-  // Read accelerometer data
-  Wire.beginTransmission(0x68);
-  Wire.write(0x3B); 
-  Wire.endTransmission(false);
-  
-  Wire.requestFrom((uint16_t)0x68, (uint8_t)6, (bool)true);
-  
-  int16_t raw_ax = Wire.read() << 8 | Wire.read();
-  int16_t raw_ay = Wire.read() << 8 | Wire.read();
-  int16_t raw_az = Wire.read() << 8 | Wire.read();
-  
-  // Convert to g-force
-  ax = raw_ax / 16384.0;
-  ay = raw_ay / 16384.0;
-  az = raw_az / 16384.0;
+void OnTxDone() {
+    Serial.println("TX done, opening buzzer RX window...");
+    buzzerWindowActive = true;
+    buzzerWindowStart = millis();
+    Radio.Rx(0); // Open continuous RX for buzzer window
 }
 
 void getGPSFix() {
-  Serial.println("Powering GPS...");
-  VextON();
-  delay(10);
-  GPS.begin();
-
-  uint32_t start = millis();
-  bool gotFix = false;
-
-  while ((millis() - start) < GPS_TIMEOUT) {
-    while (GPS.available() > 0) {
-      GPS.encode(GPS.read());
+    VextON();
+    delay(10);
+    GPS.begin();
+    uint32_t start = millis();
+    bool gotFix = false;
+    while ((millis() - start) < 20000) {
+        while (GPS.available() > 0) GPS.encode(GPS.read());
+        if (GPS.location.isValid() && GPS.location.age() < 2000) {
+            latitude = GPS.location.lat();
+            longitude = GPS.location.lng();
+            gotFix = true;
+            break;
+        }
     }
-    if (GPS.location.isValid() && GPS.location.age() < 2000) {
-      latitude = GPS.location.lat();
-      longitude = GPS.location.lng();
-      gotFix = true;
-      break;
-    }
-  }
-
-  if (!gotFix) {
-    latitude = 0.0;
-    longitude = 0.0;
-  }
-  GPS.end();
-  VextOFF();
+    if (!gotFix) { latitude = 0.0; longitude = 0.0; }
+    GPS.end();
+    VextOFF();
 }
 
 void updateSensors() {
-  // light sensor
-  lux = readLightSensor();
-  
-  // accelerometer data
-  float ax, ay, az;
-  readMPU6050(ax, ay, az);
-  
-  // Calculate movement 
-  float acc_magnitude = sqrt(ax * ax + ay * ay + az * az);
-  if (acc_magnitude > 1.1) { // Threshold for movement detection (1.1g)
-    movementSum += (uint16_t)(acc_magnitude * 100);
-  }
+    VextON();
+    delay(10);
+    lux = lightMeter.readLightLevel();
+    mpu.update();
+    float totalAcc = sqrt(mpu.getAccX()*mpu.getAccX() + mpu.getAccY()*mpu.getAccY() + mpu.getAccZ()*mpu.getAccZ());
+    if (totalAcc > 0.1) movementSum += (uint16_t)(totalAcc*10);
 
-  // Status 
-  if (movementSum < 100) {
-    flags = (flags & ~0b110) | (0b10 << 1);  // problem
-  } else if (movementSum < 1000) {
-    flags = (flags & ~0b110) | (0b01 << 1);  // chill
-  } else {
-    flags = (flags & ~0b110) | (0b00 << 1);  // curious
-  }
+    // Sleep detection
+    unsigned long now = millis();
+    if (totalAcc < SLEEP_THRESHOLD) {
+        if (immobileStart == 0) immobileStart = now;
+        else if (now - immobileStart >= MIN_SLEEP_PERIOD) sleepTime += (SLEEP_INTERVAL/1000);
+    } else immobileStart = 0;
 
-  // Sleep flag
-  flags &= ~0b001; // sleeping = 0
-  
-  readBattery();
-  
-  Serial.printf("Accel: X=%.2fg, Y=%.2fg, Z=%.2fg, Lux: %.1f\n", ax, ay, az, lux);
+    // Jump detection
+    if (totalAcc > JUMP_THRESHOLD) jumps++;
+
+    flags = (flags & ~0b110) | ((movementSum<100)?(0b10<<1):((movementSum<1000)?(0b01<<1):0b00));
+    flags &= ~0b001;
+    battery = map(getBatteryVoltage(), 3000, 4200, 0, 100);
+    VextOFF();
 }
 
 void sendPacket() {
-  int32_t lat_i = (int32_t)(latitude * 1000000);
-  int32_t lon_i = (int32_t)(longitude * 1000000);
-  uint16_t lux_i = (uint16_t)lux;
+    int32_t lat_i = (int32_t)(latitude*1000000);
+    int32_t lon_i = (int32_t)(longitude*1000000);
+    uint16_t lux_i = (uint16_t)lux;
+    uint8_t payload[18];
+    memcpy(payload, &lat_i, 4);
+    memcpy(payload+4, &lon_i, 4);
+    memcpy(payload+8, &movementSum, 2);
+    memcpy(payload+10, &lux_i, 2);
+    payload[12] = flags;
+    payload[13] = battery;
+    memcpy(payload+14, &sleepTime, 2);
+    memcpy(payload+16, &jumps, 2);
 
-  uint8_t payload[14];  
-  memcpy(payload, &lat_i, 4);
-  memcpy(payload + 4, &lon_i, 4);
-  memcpy(payload + 8, &movementSum, 2);
-  memcpy(payload + 10, &lux_i, 2);
-  payload[12] = flags;
-  payload[13] = batteryPercent;  
+    Serial.println("Sending binary payload...");
+    Radio.Send(payload, sizeof(payload));
 
-  Serial.println("Sending binary payload:");
-  Serial.printf("Lat: %.6f Lon: %.6f Movement: %d Lux: %.1f Flags: %d Battery: %d%%\n",
-                latitude, longitude, movementSum, lux, flags, batteryPercent);
-
-  Radio.Send(payload, sizeof(payload));
+    movementSum = 0; sleepTime = 0; jumps = 0;
 }
 
-void OnTxDone(void) { Serial.println("TX done, sleeping..."); lowPowerHandler(); }
-void OnTxTimeout(void) { Serial.println("TX timeout, sleeping..."); lowPowerHandler(); }
-
 void setup() {
-  Serial.begin(115200);
-  while (!Serial);
+    Serial.begin(115200);
+    while(!Serial);
 
-  // Init battery monitoring
-  pinMode(BATTERY_PIN, INPUT);
-  
-  // Init LoRa
-  RadioEvents.TxDone = OnTxDone;
-  RadioEvents.TxTimeout = OnTxTimeout;
-  Radio.Init(&RadioEvents);
-  Radio.SetChannel(RF_FREQUENCY);
-  Radio.SetTxConfig(MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
-                    LORA_SPREADING_FACTOR, LORA_CODINGRATE,
-                    LORA_PREAMBLE_LENGTH, false,
-                    true, 0, 0, false, 3000);
+    pinMode(BUZZER_PIN, OUTPUT); digitalWrite(BUZZER_PIN, LOW);
 
-  Wire.begin(4, 5); // !!! SDA on pin 4, SCL on pin 5
+    Serial.println("CubeCell LoRa Sender");
 
-  Wire.beginTransmission(BH1750_ADDRESS);
-  Wire.write(0x01);
-  Wire.endTransmission();
-  
-  Serial.println("Sensors initialized");
+    VextON(); delay(50);
 
-  TimerInit(&wakeTimer, [] {});
-  TimerSetValue(&wakeTimer, SLEEP_INTERVAL);
+    RadioEvents.TxDone = OnTxDone;
+    RadioEvents.RxDone = onRxDone;
+    Radio.Init(&RadioEvents);
+    Radio.SetChannel(868000000);
+    Radio.SetTxConfig(MODEM_LORA, 14, 0, 0, 7, 1, 8, false, true, 0, 0, false, 3000);
+
+    Wire.begin(4,5);
+    lightMeter.begin();
+
+    byte status = mpu.begin();
+    if(status!=0){Serial.println("MPU6050 init failed!"); while(1);}
+    delay(1000); mpu.calcOffsets();
+    VextOFF();
+
+    TimerInit(&wakeTimer, onWake);
+    TimerSetValue(&wakeTimer, SLEEP_INTERVAL);
+    TimerStart(&wakeTimer);
 }
 
 void loop() {
-  getGPSFix();
-  updateSensors();
-  sendPacket();
+    getGPSFix();
+    updateSensors();
+    sendPacket();
 
-  TimerStart(&wakeTimer);
-  lowPowerHandler();
+    Serial.printf("Sleeping for %lu ms...\n", SLEEP_INTERVAL);
+    buzzerWindowActive = true;
+    buzzerWindowStart = millis();
+
+    TimerStart(&wakeTimer);
+    while (millis() - buzzerWindowStart < BUZZER_RX_WINDOW) {
+        lowPowerHandler(); // Stay in low-power while listening for buzzer commands (TODO: might need to improve this, can mess with the gps/lora on long term)
+    }
+
+    buzzerWindowActive = false;
+
+    VextOFF();
+    lowPowerHandler(); 
 }

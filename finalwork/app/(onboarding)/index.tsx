@@ -15,7 +15,6 @@ import mapImg from "../../assets/images/mapImg.jpg";
 import geofenceImg from "../../assets/images/geofenceImg.jpg";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { router } from "expo-router";
-// TODO: make/photoshop images and replace these placeholder images
 
 // const { width } = Dimensions.get("window");
 // finalwork/assets/images/test.jpg
@@ -75,6 +74,13 @@ export default function Onboarding() {
             width: Dimensions.get("window").width,
             height: 400,
             marginBottom: 50,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
           }}
         />
       </View>

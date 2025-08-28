@@ -9,13 +9,13 @@ import {
   Platform,
   Image,
   Alert,
+  ImageBackground,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-
 
 export default function CatProfileEditScreen() {
   // Profielgegevens
@@ -42,7 +42,8 @@ export default function CatProfileEditScreen() {
       const savedImage = await AsyncStorage.getItem("profileImage");
       if (savedImage) setImage(savedImage);
 
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Toestemming vereist",
@@ -84,6 +85,18 @@ export default function CatProfileEditScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <ImageBackground
+        source={require("../../assets/images/greenBlobBg.png")}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      >
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: "rgba(0,0,0,0)" },
+          ]}
+        />
+      </ImageBackground>
       <Text style={styles.title}>Pas je kattenprofiel aan</Text>
 
       <View style={styles.question}>
@@ -91,7 +104,7 @@ export default function CatProfileEditScreen() {
         <TextInput
           style={styles.input}
           placeholder="Bijv. Pixel"
-          placeholderTextColor="#999"
+          placeholderTextColor="#000"
           value={name}
           onChangeText={setName}
         />
@@ -99,8 +112,11 @@ export default function CatProfileEditScreen() {
 
       <View style={styles.question}>
         <Text style={styles.label}>Geboortedatum</Text>
-        <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
-          <Text style={{ color: birthday ? "#fff" : "#999" }}>
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={{ color: birthday ? "#000" : "#999" }}>
             {birthday ? birthday.toLocaleDateString() : "Selecteer een datum"}
           </Text>
         </TouchableOpacity>
@@ -119,7 +135,7 @@ export default function CatProfileEditScreen() {
         <TextInput
           style={styles.input}
           placeholder="Bijv. 4.2"
-          placeholderTextColor="#999"
+          placeholderTextColor="#000"
           keyboardType="numeric"
           value={weight}
           onChangeText={setWeight}
@@ -194,8 +210,9 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   input: {
+    flex: 1,
     borderWidth: 1,
-    borderColor: "#666",
+    borderColor: "#fff",
     padding: 10,
     borderRadius: 6,
     color: "#fff",
@@ -241,11 +258,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   button: {
-    backgroundColor: "#4CAF50",
-    padding: 14,
-    borderRadius: 8,
+    width: 300,
+    padding: 10,
+    borderRadius: 5,
     alignItems: "center",
-    width: "100%",
+    backgroundColor: "#FD9003",
+    // dropshadow
+    shadowColor: "#FD9003",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 2,
   },
   buttonText: {
     color: "#fff",

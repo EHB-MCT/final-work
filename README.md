@@ -4,24 +4,23 @@
 
 <!-- ![Meowtracks Logo](/finalwork/assets/logo.svg) -->
 
-## <img src="finalwork/assets/logo.svg" alt="Meowtracks Logo" width="500" style="display: block; margin: 0 auto;" />
+## <img src="finalwork/assets/logo.png" alt="Meowtracks Logo" width="900" style="display: block; margin: 0 auto;" />
 
 ## 📜 Description
 
-Meowtracks is a smart GPS and activity tracker for cats, designed to monitor real-time location, activity levels, and abnormal movement patterns. The system sends data from an ESP32-based T-Beam directly via WiFi to a Node.js backend with MongoDB storage. This allows cat owners to receive timely alerts about potential health risks or dangerous situations.
-
----
+Meowtracks is a smart GPS and activity tracker for cats, designed to monitor location and activity levels. The system sends data from a Heltec Cubecell to a T-beam over LoRa, which in turns uses wifi to send the received data to a Node.js backend with MongoDB storage. This makes it so users can get regular updates on their cat's whereabouts and behavior.
 
 ## ⚙️ Core features
 
-- 🐾 **Real-time location tracking via GNSS**
-- 📊 **Activity monitoring using an accelerometer (MPU)**
-- ⚠️ **Detection and analysis of abnormal movement patterns**
-- 🌐 **Direct data transmission over WiFi (no LoRa)**
-- 📡 **Visualization through a mobile app**
-- 🐈 **User-friendly and cat-friendly hardware enclosure**
-
----
+- **Real-time location tracking via GNSS**
+- **Location insights and history such as taken routes and favorite spots**
+- **Detection of abnormal low activity levels**
+- **Data transmission over LoRa and WiFi**
+- **Activity monitoring using an accelerometer (MPU)**
+- **Alerts for when crossing geofences**
+- **Remote controlled buzzer**
+- **Visualization through a mobile app**
+- **User-friendly and cat-friendly hardware enclosure**
 
 ## 📦 Tech stack
 
@@ -31,63 +30,27 @@ Meowtracks is a smart GPS and activity tracker for cats, designed to monitor rea
 - **Frontend:** React Native (for mobile interface)
 - **Protocol:** HTTP over WiFi
 
----
-
-## 📂 Folder structure
-
-```
-
-final-work/
-├── finalwork-backend/
-│ ├── src/
-│ ├── .env.example
-│ ├── package.json
-│ └── README.md
-├── esp32-firmware/
-│ ├── src/
-│ ├── platformio.ini
-│ └── README.md
-├── finalwork/
-│ ├── assets/
-│ ├── src/
-│ ├── app.json
-│ ├── package.json
-│ └── README.md
-├── README.md
-
-
-
-```
-
----
-
 ## 🔧 Installation
 
-### 1. ESP32 Firmware
-
-- Installeer Arduino IDE
-- Voeg de ESP32 board manager toe via de board URL
-- Flash de firmware op de T-Beam met juiste WiFi- en endpointconfiguratie
-
-### 2. Backend (Node.js)
+### Mobile app
 
 ```bash
-cd finalwork-backend
-npm install
-npm run dev
-```
-
-Zorg ervoor dat `.env` een geldige MongoDB URI bevat.
-
-### 3. Mobiele app
-
-```bash
+git clone <https://github.com/EHB-MCT/final-work.git>
 cd final-work
 npm install
 npx expo start // using the Expo Go app on your mobile device
 ```
 
----
+### Hardware
+
+- Download Arduino IDE
+- Go to file > Preferences > Additional Board Manager URLs
+- Add the following URLs:
+  - http://resource.heltec.cn/download/package_CubeCell_index.json
+  - https://dl.espressif.com/dl/package_esp32_index.json
+- Go to Tools > Board > Board Manager
+  Install the ESP32 board package and the Heltec board package
+- Upload the firmware to the each board (found in firmware/)
 
 ## 📸 Screenshots and media
 
@@ -98,8 +61,11 @@ npx expo start // using the Expo Go app on your mobile device
 
 ## </div>
 
-<img src="finalwork/assets/images/hardware/tbeam-img.png" alt="Meowtracks App Screenshot" width="900" style="display: block; margin: 0 auto;" />
-
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img src="finalwork/assets/images/hardware/hardware.jpg" alt="Meowtracks App Screenshot" width="900" style="display: block; margin: 0 auto;" />
+<img src="finalwork/assets/images/hardware/hardware2.jpg" alt="Meowtracks App Screenshot" width="900" style="display: block; margin: 0 auto;" />
+<img src="finalwork/assets/images/hardware/hardware3.jpg" alt="Meowtracks App Screenshot" width="900" style="display: block; margin: 0 auto;" />
+</div>
 ## 📚 Resources
 
 - **AsyncStorage in React Native**  
@@ -148,9 +114,10 @@ npx expo start // using the Expo Go app on your mobile device
   https://chatgpt.com/share/684f13ba-d6a8-8008-a7c8-8ef43ab9f3e9
 
 - **Navigation bar**
-- https://github.com/valisoftworks/Enhanced-Fluid-Bottom-Navigation-Bar
+  https://github.com/valisoftworks/Enhanced-Fluid-Bottom-Navigation-Bar
 
----
+**Testing notification with Postman**
+https://chatgpt.com/share/68af2533-192c-8002-b91c-a5474f03bbb8
 
 ## 🧑‍💻 Authors
 
