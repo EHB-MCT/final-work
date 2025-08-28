@@ -24,11 +24,11 @@ Meowtracks is a smart GPS and activity tracker for cats, designed to monitor loc
 
 ## 📦 Tech stack
 
-- **Hardware:** LilyGO T-Beam v1.2 (ESP32 + GNSS + MPU6050)
+- **Hardware:** LilyGO T-Beam v1.2 , Heltec CubeCell GPS-6502 (HTCC-AB02S)
 - **Backend:** Node.js + Express
 - **Database:** MongoDB (cloud)
 - **Frontend:** React Native (for mobile interface)
-- **Protocol:** HTTP over WiFi
+- **Protocol:** HTTP over WiFi, LoRa
 
 ## 🔧 Installation
 
